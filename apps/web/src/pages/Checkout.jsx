@@ -1,0 +1,431 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import siteConfig from '../config/siteConfig'
+import { formatCurrency } from '../utils/formatCurrency'
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+
+function CheckoutForm({ cart, user, deliveryMethod, setDeliveryMethod, paymentIntentId, form, setForm, taxQuote, taxLoading, addressReady }) {
+  const { showToast } = useToast()
+  const navigate = useNavigate()
+  const stripe = useStripe()
+  const elements = useElements()
+  const [placing, setPlacing] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [confirmedOrderId, setConfirmedOrderId] = useState(null)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setPlacing(true)
+
+    try {
+      const { error: stripeError } = await stripe.confirmPayment({
+        elements,
+        redirect: 'if_required'
+      })
+
+      if (stripeError) {
+        showToast(stripeError.message, 'error')
+        setPlacing(false)
+        return
+      }
+
+      let res
+      if (user) {
+        res = await api.post('/Orders/checkout', {
+          guestEmail: null,
+          cartItems: null,
+          deliveryMethod: deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping',
+          paymentIntentId,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone,
+          address: deliveryMethod === 'shipping' ? form.address : null,
+          city: deliveryMethod === 'shipping' ? form.city : null,
+          state: deliveryMethod === 'shipping' ? form.state : null,
+          zip: deliveryMethod === 'shipping' ? form.zip : null,
+        })
+      } else {
+        res = await api.post('/Orders/checkout', {
+          guestEmail: form.email,
+          cartItems: cart.items.map(item => ({
+            variantId: item.variantId,
+            quantity: item.quantity
+          })),
+          deliveryMethod: deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping',
+          paymentIntentId,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone,
+          address: deliveryMethod === 'shipping' ? form.address : null,
+          city: deliveryMethod === 'shipping' ? form.city : null,
+          state: deliveryMethod === 'shipping' ? form.state : null,
+          zip: deliveryMethod === 'shipping' ? form.zip : null,
+        })
+        localStorage.removeItem('guestCart')
+      }
+
+      setConfirmedOrderId(res.data.orderId)
+      setShowSuccess(true)
+    } catch {
+      showToast('Failed to place order', 'error')
+    } finally {
+      setPlacing(false)
+    }
+  }
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <div className="flex flex-col lg:flex-row gap-8">
+
+          <div className="flex-1 space-y-6">
+
+            {/* Delivery method */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--brand-primary)' }}>Delivery method</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <button type="button" onClick={() => setDeliveryMethod('shipping')}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${deliveryMethod === 'shipping' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}>
+                  <div className="text-2xl mb-2">🚚</div>
+                  <div className="font-semibold text-sm" style={{ color: 'var(--brand-primary)' }}>Shipping</div>
+                  <div className="text-xs text-gray-400 mt-0.5">+{formatCurrency(siteConfig.commerce.shippingFlatRate)} delivered to your door</div>
+                </button>
+                <button type="button" onClick={() => setDeliveryMethod('pickup')}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${deliveryMethod === 'pickup' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}`}>
+                  <div className="text-2xl mb-2">🏪</div>
+                  <div className="font-semibold text-sm" style={{ color: 'var(--brand-primary)' }}>Pickup</div>
+                  <div className="text-xs text-gray-400 mt-0.5">Free — pick up in store</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Contact info */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--brand-primary)' }}>Contact information</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>First name</label>
+                  <input type="text" required value={form.firstName}
+                    onChange={e => setForm({ ...form, firstName: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>Last name</label>
+                  <input type="text" required value={form.lastName}
+                    onChange={e => setForm({ ...form, lastName: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>Email</label>
+                  <input type="email" required value={form.email}
+                    onChange={e => setForm({ ...form, email: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>Phone</label>
+                  <input type="tel" value={form.phone}
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* Shipping address */}
+            {deliveryMethod === 'shipping' && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--brand-primary)' }}>Shipping address</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>Street address</label>
+                    <input type="text" required value={form.address}
+                      onChange={e => setForm({ ...form, address: e.target.value })}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      placeholder="123 Main St" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1">
+                      <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>City</label>
+                      <input type="text" required value={form.city}
+                        onChange={e => setForm({ ...form, city: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>State</label>
+                      <input type="text" required value={form.state}
+                        onChange={e => setForm({ ...form, state: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        placeholder="MI" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-primary)' }}>ZIP</label>
+                      <input type="text" required value={form.zip}
+                        onChange={e => setForm({ ...form, zip: e.target.value })}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Pickup info */}
+            {deliveryMethod === 'pickup' && (
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
+                <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--brand-primary)' }}>Pickup location</h2>
+                <p className="text-gray-600 text-sm">{siteConfig.commerce.pickup.businessName}</p>
+                <p className="text-gray-500 text-sm mt-1">{siteConfig.commerce.pickup.locationLabel}</p>
+                <p className="text-gray-500 text-sm mt-3">{siteConfig.commerce.pickup.readyMessage}</p>
+              </div>
+            )}
+
+            {/* Payment */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--brand-primary)' }}>Payment</h2>
+              {addressReady && taxQuote ? (
+                <PaymentElement />
+              ) : (
+                <p className="text-sm text-gray-400">
+                  {deliveryMethod === 'pickup'
+                    ? 'Loading payment options...'
+                    : 'Enter your shipping address to see tax and pay.'}
+                </p>
+              )}
+            </div>
+
+          </div>
+
+          {/* Right — summary */}
+          <div className="lg:w-80 shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 sticky top-6">
+              <h2 className="text-lg font-bold mb-6" style={{ color: 'var(--brand-primary)' }}>Order summary</h2>
+              {cart && (
+                <>
+                  <div className="space-y-3 mb-6">
+                    {cart.items.map(item => (
+                      <div key={item.variantId} className="flex justify-between text-sm">
+                        <span className="text-gray-500 truncate mr-2">
+                          {item.productName} ({item.size}) x{item.quantity}
+                        </span>
+                        <span className="font-medium shrink-0" style={{ color: 'var(--brand-primary)' }}>
+                          {formatCurrency(item.subtotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-4 mb-2">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-gray-500">Subtotal</span>
+                      <span className="font-medium" style={{ color: 'var(--brand-primary)' }}>{formatCurrency(cart.total)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-gray-500">Shipping</span>
+                      <span className="font-medium" style={{ color: 'var(--brand-primary)' }}>
+                        {deliveryMethod === 'pickup' ? 'Free (pickup)' : formatCurrency(siteConfig.commerce.shippingFlatRate)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-4">
+                      <span className="text-gray-500">Tax</span>
+                      <span className="font-medium" style={{ color: 'var(--brand-primary)' }}>
+                        {taxLoading ? '...'
+                          : taxQuote ? formatCurrency(taxQuote.tax)
+                            : addressReady ? formatCurrency(0)
+                              : <span className="text-xs text-gray-400">enter address</span>}
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-3 border-t border-gray-100">
+                      <span className="font-bold" style={{ color: 'var(--brand-primary)' }}>Total</span>
+                      <span className="font-bold text-xl" style={{ color: 'var(--brand-accent)' }}>
+                        {taxQuote
+                          ? formatCurrency(taxQuote.total)
+                          : formatCurrency(cart.total + (deliveryMethod === 'pickup' ? 0 : siteConfig.commerce.shippingFlatRate))}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+              <button
+                type="submit"
+                disabled={placing || !stripe || !taxQuote || taxLoading}
+                style={{ backgroundColor: 'var(--brand-accent)' }}
+                className="w-full py-4 rounded-xl text-white font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity shadow-lg"
+              >
+                {placing ? 'Processing...' : 'Pay & place order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg text-white"
+              style={{ backgroundColor: 'var(--brand-accent)' }}>✓</div>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--brand-primary)' }}>Order confirmed!</h2>
+            <p className="text-gray-500 mb-2">Thank you for your order.</p>
+            <p className="text-sm text-gray-400 mb-6">
+              Order <span className="font-semibold" style={{ color: 'var(--brand-primary)' }}>#{confirmedOrderId}</span> has been placed.
+            </p>
+
+            {cart?.items?.some(i => i.requiresArtwork) && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 text-left">
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--brand-primary)' }}>📎 Check your email</p>
+                <p className="text-xs text-gray-600">
+                  We've sent upload links for the item(s) that need your artwork. Click the link in your email to upload each one.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              {user && (
+                <button onClick={() => navigate('/profile')}
+                  className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-colors"
+                  style={{ color: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}>
+                  View order history
+                </button>
+              )}
+              <button onClick={() => navigate('/')}
+                style={{ backgroundColor: 'var(--brand-accent)' }}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+                Back to home
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export default function Checkout() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [cart, setCart] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [clientSecret, setClientSecret] = useState(null)
+  const [paymentIntentId, setPaymentIntentId] = useState(null)
+  const [deliveryMethod, setDeliveryMethod] = useState('shipping')
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', phone: '',
+    address: '', city: '', state: '', zip: '',
+  })
+  const [taxQuote, setTaxQuote] = useState(null)
+  const [taxLoading, setTaxLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        let cartData
+        if (user) {
+          const res = await api.get('/Cart')
+          if (!res.data || res.data.items.length === 0) {
+            navigate('/cart')
+            return
+          }
+          cartData = res.data
+        } else {
+          const guestCart = localStorage.getItem('guestCart')
+          if (!guestCart) { navigate('/cart'); return }
+          const parsed = JSON.parse(guestCart)
+          if (!parsed.items || parsed.items.length === 0) { navigate('/cart'); return }
+          cartData = parsed
+        }
+
+        setCart(cartData)
+      } catch {
+        navigate('/cart')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCart()
+  }, [])
+
+  // Address is "ready" when pickup OR all four shipping fields are filled
+  const addressReady = deliveryMethod === 'pickup' || (
+    form.address.trim() && form.city.trim() && form.state.trim() && form.zip.trim()
+  )
+
+  // Debounced tax + intent recalculation
+  useEffect(() => {
+    if (!cart || !addressReady) {
+      setTaxQuote(null)
+      setClientSecret(null)
+      setPaymentIntentId(null)
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      setTaxLoading(true)
+      try {
+        const payload = {
+          cartItems: user ? null : cart.items.map(i => ({
+            variantId: i.variantId,
+            quantity: i.quantity
+          })),
+          deliveryMethod: deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping',
+          address: deliveryMethod === 'shipping' ? form.address : null,
+          city: deliveryMethod === 'shipping' ? form.city : null,
+          state: deliveryMethod === 'shipping' ? form.state : null,
+          zip: deliveryMethod === 'shipping' ? form.zip : null,
+        }
+
+        // Single round-trip: create-intent both calculates tax and gives us a fresh intent.
+        const intentRes = await api.post('/Payments/create-intent', payload)
+        setClientSecret(intentRes.data.clientSecret)
+        setPaymentIntentId(intentRes.data.paymentIntentId)
+        setTaxQuote(intentRes.data.taxQuote)
+      } catch (err) {
+        console.error('Failed to update payment intent / tax', err)
+        setTaxQuote(null)
+      } finally {
+        setTaxLoading(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(timeout)
+  }, [cart, deliveryMethod, form.address, form.city, form.state, form.zip, addressReady, user])
+
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-pulse text-gray-400 text-lg">Loading...</div>
+    </div>
+  )
+
+  // Stripe Elements requires a clientSecret. We use the placeholder Promise pattern:
+  // wrap in a key that bumps when clientSecret arrives, so the Elements provider
+  // remounts with the real secret. The form renders unconditionally so the user can
+  // type their address; the PaymentElement inside it gates itself on (addressReady && taxQuote).
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <h1 className="text-3xl font-bold mb-8" style={{ color: 'var(--brand-primary)' }}>Checkout</h1>
+        <Elements
+          stripe={stripePromise}
+          options={clientSecret ? { clientSecret, appearance: { theme: 'stripe' } } : { mode: 'payment', amount: 1, currency: siteConfig.commerce.currency.toLowerCase(), appearance: { theme: 'stripe' } }}
+          key={clientSecret ?? 'pre-intent'}
+        >
+          <CheckoutForm
+            cart={cart}
+            user={user}
+            deliveryMethod={deliveryMethod}
+            setDeliveryMethod={setDeliveryMethod}
+            paymentIntentId={paymentIntentId}
+            form={form}
+            setForm={setForm}
+            taxQuote={taxQuote}
+            taxLoading={taxLoading}
+            addressReady={addressReady}
+          />
+        </Elements>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,39 @@
+/*
+ * OWNER THEME
+ * Change the values in this file to re-skin the entire storefront.
+ * The existing Tailwind `orange-*` utilities are intentionally remapped to
+ * the brand accent palette so legacy components also follow this theme.
+ */
+:root {
+  --brand-primary: #1B2A4A;
+  --brand-primary-dark: #0F1C33;
+  --brand-primary-light: #233A66;
+
+  --brand-accent: #E8620A;
+  --brand-accent-dark: #C4510A;
+  --brand-accent-light: #F07830;
+  --brand-accent-soft: #FFA86B;
+
+  --brand-surface: #FAF6F0;
+  --brand-muted: #8AA3CC;
+  --brand-muted-dark: #5A75A0;
+
+  --font-brand-display: 'Anton', 'Bebas Neue', Impact, sans-serif;
+  --font-brand-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Remap the accent utilities already used throughout the site. */
+  --color-orange-50: color-mix(in srgb, var(--brand-accent) 8%, white);
+  --color-orange-100: color-mix(in srgb, var(--brand-accent) 14%, white);
+  --color-orange-200: color-mix(in srgb, var(--brand-accent) 25%, white);
+  --color-orange-300: color-mix(in srgb, var(--brand-accent) 42%, white);
+  --color-orange-400: color-mix(in srgb, var(--brand-accent) 72%, white);
+  --color-orange-500: var(--brand-accent);
+  --color-orange-600: color-mix(in srgb, var(--brand-accent) 85%, black);
+  --color-orange-700: color-mix(in srgb, var(--brand-accent) 72%, black);
+  --color-orange-800: color-mix(in srgb, var(--brand-accent) 60%, black);
+  --color-orange-900: color-mix(in srgb, var(--brand-accent) 48%, black);
+}
+
+body {
+  font-family: var(--font-brand-body);
+}
