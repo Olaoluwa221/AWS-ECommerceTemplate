@@ -34,7 +34,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await api.get('/Orders/all')
+      const res = await api.get('/orders/all')
       setOrders(res.data)
     } catch {
       showToast('Failed to load orders', 'error')
@@ -45,7 +45,7 @@ export default function AdminOrders() {
 
   const handleViewArtwork = async (orderId, variantId) => {
     try {
-      const res = await api.get(`/Images/orders/${orderId}/artwork/${variantId}/url`)
+      const res = await api.get(`/images/orders/${orderId}/artwork/${variantId}/url`)
       window.open(res.data.url, '_blank')
     } catch {
       showToast('Failed to load artwork', 'error')
@@ -55,7 +55,7 @@ export default function AdminOrders() {
   const handleRegenerateLink = async (orderId, variantId) => {
     if (!confirm('Send a new artwork upload link to the customer? Any previous link will stop working.')) return
     try {
-      await api.post(`/Orders/${orderId}/regenerate-artwork-token/${variantId}`)
+      await api.post(`/orders/${orderId}/regenerate-artwork-token/${variantId}`)
       showToast('New upload link emailed to customer')
     } catch {
       showToast('Failed to send new link', 'error')
@@ -64,7 +64,7 @@ export default function AdminOrders() {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await api.put(`/Orders/${orderId}/status`, { orderStatus: newStatus })
+      await api.put(`/orders/${orderId}/status`, { orderStatus: newStatus })
       showToast('Order status updated')
       fetchOrders()
       if (selectedOrder?.orderId === orderId) {
@@ -137,7 +137,7 @@ export default function AdminOrders() {
                       key={order.orderId}
                       onClick={async () => {
                         try {
-                          const res = await api.get('/Orders/all')
+                          const res = await api.get('/orders/all')
                           const fresh = res.data.find(o => o.orderId === order.orderId)
                           setSelectedOrder(fresh || order)
                         } catch {

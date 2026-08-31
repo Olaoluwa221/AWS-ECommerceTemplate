@@ -25,8 +25,8 @@ export default function AdminProducts() {
   const fetchData = async () => {
     try {
       const [productsRes, typesRes] = await Promise.all([
-        api.get('/Products'),
-        api.get('/ProductTypes')
+        api.get('/products'),
+        api.get('/producttypes')
       ])
       setProducts(productsRes.data)
       setProductTypes(typesRes.data)
@@ -70,7 +70,7 @@ export default function AdminProducts() {
     e.preventDefault()
     try {
       if (editingProduct) {
-        await api.put(`/Products/${editingProduct.productId}`, {
+        await api.put(`/products/${editingProduct.productId}`, {
           productName: productForm.productName,
           description: productForm.description,
           productTypeId: parseInt(productForm.productTypeId),
@@ -78,7 +78,7 @@ export default function AdminProducts() {
         })
         showToast('Product updated')
       } else {
-        await api.post('/Products', {
+        await api.post('/products', {
           productName: productForm.productName,
           description: productForm.description,
           productTypeId: parseInt(productForm.productTypeId),
@@ -96,7 +96,7 @@ export default function AdminProducts() {
   const handleDeleteProduct = async (id) => {
     if (!confirm('Delete this product?')) return
     try {
-      await api.delete(`/Products/${id}`)
+      await api.delete(`/products/${id}`)
       showToast('Product deleted')
       fetchData()
     } catch {
@@ -108,13 +108,13 @@ export default function AdminProducts() {
     e.preventDefault()
     try {
       if (editingVariant) {
-        await api.put(`/Products/variants/${editingVariant.variantId}`, {
+        await api.put(`/products/variants/${editingVariant.variantId}`, {
           size: variantForm.size,
           price: parseFloat(variantForm.price)
         })
         showToast('Variant updated')
       } else {
-        await api.post(`/Products/${selectedProduct.productId}/variants`, {
+        await api.post(`/products/${selectedProduct.productId}/variants`, {
           size: variantForm.size,
           price: parseFloat(variantForm.price)
         })
@@ -131,7 +131,7 @@ export default function AdminProducts() {
   const handleDeleteVariant = async (variantId) => {
     if (!confirm('Delete this variant?')) return
     try {
-      await api.delete(`/Products/variants/${variantId}`)
+      await api.delete(`/products/variants/${variantId}`)
       showToast('Variant deleted')
       fetchData()
     } catch {
@@ -146,11 +146,11 @@ export default function AdminProducts() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const uploadRes = await api.post('/Images/upload', formData, {
+      const uploadRes = await api.post('/images/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       const isFirst = !selectedProduct.pictures || selectedProduct.pictures.length === 0
-      await api.post(`/Images/products/${selectedProduct.productId}/assign`, {
+      await api.post(`/images/products/${selectedProduct.productId}/assign`, {
         pictureId: uploadRes.data.pictureId,
         isPrimary: isFirst
       })
@@ -166,7 +166,7 @@ export default function AdminProducts() {
 
   const handleSetPrimary = async (pictureId) => {
     try {
-      await api.put(`/Images/products/${selectedProduct.productId}/primary/${pictureId}`)
+      await api.put(`/images/products/${selectedProduct.productId}/primary/${pictureId}`)
       showToast('Primary photo updated')
       fetchData()
     } catch {
@@ -177,7 +177,7 @@ export default function AdminProducts() {
   const handleDeletePhoto = async (pictureId) => {
     if (!confirm('Remove this photo?')) return
     try {
-      await api.delete(`/Images/products/${selectedProduct.productId}/pictures/${pictureId}`)
+      await api.delete(`/images/products/${selectedProduct.productId}/pictures/${pictureId}`)
       showToast('Photo removed')
       fetchData()
     } catch {
@@ -188,7 +188,7 @@ export default function AdminProducts() {
   const handleAddType = async (e) => {
     e.preventDefault()
     try {
-      await api.post('/ProductTypes', JSON.stringify(newTypeName), {
+      await api.post('/producttypes', JSON.stringify(newTypeName), {
         headers: { 'Content-Type': 'application/json' }
       })
       showToast('Product type added')
@@ -202,7 +202,7 @@ export default function AdminProducts() {
   const handleDeleteType = async (id) => {
     if (!confirm('Delete this product type?')) return
     try {
-      await api.delete(`/ProductTypes/${id}`)
+      await api.delete(`/producttypes/${id}`)
       showToast('Product type deleted')
       fetchData()
     } catch (err) {

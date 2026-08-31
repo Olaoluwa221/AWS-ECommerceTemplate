@@ -16,7 +16,7 @@ export default function AdminEmails() {
   useEffect(() => {
     const fetchOptedIn = async () => {
       try {
-        const res = await api.get('/Auth/opted-in-count')
+        const res = await api.get('/auth/opted-in-count')
         setOptedInCount(res.data.count)
       } catch {
         console.error('Failed to fetch opted-in count')
@@ -38,7 +38,7 @@ export default function AdminEmails() {
 
     setSending(true)
     try {
-      await api.post('/Auth/send-promotional', {
+      await api.post('/auth/send-promotional', {
         subject: form.subject,
         htmlBody: form.body
       })

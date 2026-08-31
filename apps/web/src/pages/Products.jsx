@@ -15,8 +15,8 @@ export default function Products() {
     const fetchData = async () => {
       try {
         const [productsRes, typesRes] = await Promise.all([
-          api.get('/Products'),
-          api.get('/ProductTypes')
+          api.get('/products'),
+          api.get('/producttypes')
         ])
         setProducts(productsRes.data)
         setProductTypes(typesRes.data)

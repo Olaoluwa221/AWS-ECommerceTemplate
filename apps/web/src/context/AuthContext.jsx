@@ -1,51 +1,80 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { 
+  createContext, 
+  useContext, 
+  useState, 
+  useEffect 
+} from 'react'
+
+import api from '../api/axios'
+import { routes } from '../api/routes'
 
 const AuthContext = createContext(null)
-
-function isTokenExpired(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.exp * 1000 < Date.now()
-  } catch {
-    return true
-  }
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const email = localStorage.getItem('email')
-    const userType = localStorage.getItem('userType')
 
-    if (token && !isTokenExpired(token)) {
-      setUser({ token, email, userType })
-    } else {
-      localStorage.removeItem('token')
-      localStorage.removeItem('email')
-      localStorage.removeItem('userType')
+    let cancelled = false
+    
+    const restoreSession = async () => {
+
+      try {
+        const res = await api.get(routes.auth.me)
+
+        if (!cancelled && res.data.user) {
+          setUser(res.data.user)
+        }
+      } catch (error) {
+
+        //Treat user as logged out if the session restoration fails
+        if (!cancelled) {
+          setUser(null)
+        }
+
+        if(error.response?.status !== 400) {
+          console.error('Error restoring session:', error)
+        }
+      } finally {
+        if (!cancelled) {
+          setAuthLoading(false)
+        }
+      }
     }
-    setAuthLoading(false)
+
+    restoreSession()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
+
   const login = (data) => {
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('email', data.email)
-    localStorage.setItem('userType', data.userType)
     setUser(data)
   }
 
-  const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('email')
-    localStorage.removeItem('userType')
-    setUser(null)
+  const logout = async () => {
+    try {
+      await api.post(routes.auth.logout) 
+    } catch (error) {
+      // Handle logout error
+      console.error('Error logging out:', error)
+      setUser(null) // Ensure user state is cleared even if logout fails
+    } finally {
+      setUser(null) // Clear user state on logout
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, authLoading }}>
+    <AuthContext.Provider 
+    value={{ 
+      user, 
+      login, 
+      logout, 
+      authLoading, 
+      }}>
       {children}
     </AuthContext.Provider>
   )

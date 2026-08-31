@@ -31,7 +31,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get('/Orders')
+        const res = await api.get('/orders')
         setOrders(res.data)
       } catch {
         showToast('Failed to load orders', 'error')
@@ -53,7 +53,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await api.get('/Auth/me')
+        const res = await api.get('/auth/me')
         setMarketingOptIn(res.data.marketingOptIn)
         setNameForm({ firstName: res.data.firstName || '', lastName: res.data.lastName || '' })
       } catch {
@@ -66,7 +66,7 @@ export default function Profile() {
   const handleSaveName = async () => {
     setSavingName(true)
     try {
-      await api.put('/Auth/update-profile', nameForm)
+      await api.put('/auth/update-profile', nameForm)
       showToast('Name updated!')
       setEditingName(false)
     } catch {
@@ -87,7 +87,7 @@ export default function Profile() {
     }
     setSavingPassword(true)
     try {
-      await api.put('/Auth/update-password', {
+      await api.put('/auth/update-password', {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       })
@@ -104,7 +104,7 @@ export default function Profile() {
   const handleOptInToggle = async () => {
     setUpdatingOptIn(true)
     try {
-      const res = await api.put('/Auth/marketing-opt-in', !marketingOptIn, {
+      const res = await api.put('/auth/marketing-opt-in', !marketingOptIn, {
         headers: { 'Content-Type': 'application/json' }
       })
       setMarketingOptIn(res.data.marketingOptIn)

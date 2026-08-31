@@ -21,7 +21,7 @@ export default function Register() {
     }
     setLoading(true)
     try {
-      await api.post('/Auth/register', {
+      await api.post('/auth/register', {
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,

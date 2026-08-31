@@ -22,7 +22,7 @@ export default function AdminUsers() {
 
     const fetchUsers = async () => {
         try {
-            const res = await api.get('/Auth/users')
+            const res = await api.get('/auth/users')
             setUsers(res.data)
         } catch {
             showToast('Failed to load users', 'error')
@@ -34,7 +34,7 @@ export default function AdminUsers() {
     const handleRoleUpdate = async (userId, newRole) => {
         setUpdatingRole(true)
         try {
-            await api.put(`/Auth/users/${userId}/role`, { role: newRole })
+            await api.put(`/auth/users/${userId}/role`, { role: newRole })
             showToast('Role updated')
             fetchUsers()
             if (selectedUser?.userId === userId) {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import siteConfig from '../config/siteConfig'
 
 export default function Login() {
@@ -25,7 +26,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const res = await api.post('/Auth/login', form)
+      const res = await api.post(routes.auth.login, form)
       login(res.data)
       if (res.data.userType === 'admin') {
         navigate('/admin')

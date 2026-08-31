@@ -11,7 +11,7 @@ export default function Unsubscribe() {
   useEffect(() => {
     const unsubscribe = async () => {
       try {
-        const res = await api.post(`/Auth/unsubscribe/${token}`)
+        const res = await api.post(`/auth/unsubscribe/${token}`)
         setEmail(res.data?.email ?? null)
         setMessage(res.data?.message ?? 'You have been unsubscribed.')
         setStatus('success')

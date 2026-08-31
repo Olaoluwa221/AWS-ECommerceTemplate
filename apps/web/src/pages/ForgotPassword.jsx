@@ -11,7 +11,7 @@ export default function ForgotPassword() {
     e.preventDefault()
     setLoading(true)
     try {
-      await api.post('/Auth/forgot-password', { email })
+      await api.post('/auth/forgot-password', { email })
       setSent(true)
     } catch {
       setSent(true) // Still show success to prevent email enumeration

@@ -20,7 +20,7 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await api.get(`/Products/${id}`)
+        const res = await api.get(`/products/${id}`)
         setProduct(res.data)
         if (res.data.variants?.length > 0) {
           setSelectedVariant(res.data.variants[0])
@@ -43,7 +43,7 @@ export default function ProductDetail() {
     setAddingToCart(true)
     try {
       if (user) {
-        await api.post('/Cart/items', {
+        await api.post('/cart/items', {
           variantId: selectedVariant.variantId,
           quantity
         })

@@ -25,7 +25,7 @@ export default function Cart() {
 
   const fetchCart = async () => {
     try {
-      const res = await api.get('/Cart')
+      const res = await api.get('/cart')
       setCart(res.data)
     } catch {
       showToast('Failed to load cart', 'error')
@@ -36,7 +36,7 @@ export default function Cart() {
 
   const handleUpdateQuantity = async (variantId, quantity) => {
     try {
-      await api.put(`/Cart/items/${variantId}`, { quantity })
+      await api.put(`/cart/items/${variantId}`, { quantity })
       fetchCart()
     } catch {
       showToast('Failed to update quantity', 'error')
@@ -45,7 +45,7 @@ export default function Cart() {
 
   const handleRemove = async (variantId) => {
     try {
-      await api.delete(`/Cart/items/${variantId}`)
+      await api.delete(`/cart/items/${variantId}`)
       showToast('Item removed')
       fetchCart()
     } catch {
@@ -56,7 +56,7 @@ export default function Cart() {
   const handleClear = async () => {
     if (!confirm('Clear your entire cart?')) return
     try {
-      await api.delete('/Cart')
+      await api.delete('/cart')
       showToast('Cart cleared')
       fetchCart()
     } catch {
