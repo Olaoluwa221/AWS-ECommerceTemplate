@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/axios'
+import { routes } from '../../api/routes'
 import { formatCurrency } from '../../utils/formatCurrency'
 
 export default function AdminDashboard() {
@@ -12,8 +13,8 @@ export default function AdminDashboard() {
     const fetchData = async () => {
       try {
         const [ordersRes, productsRes] = await Promise.all([
-          api.get('/orders/all'),
-          api.get('/products')
+          api.get(routes.orders.all),
+          api.get(routes.products.list)
         ])
         setOrders(ordersRes.data)
         setProducts(productsRes.data)

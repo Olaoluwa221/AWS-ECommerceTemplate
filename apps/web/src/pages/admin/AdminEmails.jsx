@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
+import { routes } from '../../api/routes'
 import { useToast } from '../../context/ToastContext'
 import siteConfig from '../../config/siteConfig'
 
@@ -16,7 +17,7 @@ export default function AdminEmails() {
   useEffect(() => {
     const fetchOptedIn = async () => {
       try {
-        const res = await api.get('/auth/opted-in-count')
+        const res = await api.get(routes.auth.optedInCount)
         setOptedInCount(res.data.count)
       } catch {
         console.error('Failed to fetch opted-in count')
@@ -38,7 +39,7 @@ export default function AdminEmails() {
 
     setSending(true)
     try {
-      await api.post('/auth/send-promotional', {
+      await api.post(routes.auth.sendPromotional, {
         subject: form.subject,
         htmlBody: form.body
       })

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { formatCurrency } from '../utils/formatCurrency'
@@ -31,7 +32,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await api.get('/orders')
+        const res = await api.get(routes.orders.list)
         setOrders(res.data)
       } catch {
         showToast('Failed to load orders', 'error')
@@ -53,7 +54,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const res = await api.get('/auth/me')
+        const res = await api.get(routes.auth.me)
         setMarketingOptIn(res.data.marketingOptIn)
         setNameForm({ firstName: res.data.firstName || '', lastName: res.data.lastName || '' })
       } catch {
@@ -66,7 +67,7 @@ export default function Profile() {
   const handleSaveName = async () => {
     setSavingName(true)
     try {
-      await api.put('/auth/update-profile', nameForm)
+      await api.put(routes.auth.updateProfile, nameForm)
       showToast('Name updated!')
       setEditingName(false)
     } catch {
@@ -87,7 +88,7 @@ export default function Profile() {
     }
     setSavingPassword(true)
     try {
-      await api.put('/auth/update-password', {
+      await api.put(routes.auth.updatePassword, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       })
@@ -104,7 +105,7 @@ export default function Profile() {
   const handleOptInToggle = async () => {
     setUpdatingOptIn(true)
     try {
-      const res = await api.put('/auth/marketing-opt-in', !marketingOptIn, {
+      const res = await api.put(routes.auth.marketingOptIn, !marketingOptIn, {
         headers: { 'Content-Type': 'application/json' }
       })
       setMarketingOptIn(res.data.marketingOptIn)

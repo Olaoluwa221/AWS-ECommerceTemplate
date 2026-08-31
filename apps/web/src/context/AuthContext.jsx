@@ -5,7 +5,7 @@ import {
   useEffect 
 } from 'react'
 
-import api from '../api/axios'
+import api, { clearAuthToken, setAuthToken } from '../api/axios'
 import { routes } from '../api/routes'
 
 const AuthContext = createContext(null)
@@ -52,18 +52,24 @@ export function AuthProvider({ children }) {
 
 
   const login = (data) => {
-    setUser(data)
+    const token = data?.token || data?.accessToken
+    const nextUser = data?.user || data
+
+    if (token) {
+      setAuthToken(token)
+    }
+
+    setUser(nextUser)
   }
 
   const logout = async () => {
     try {
-      await api.post(routes.auth.logout) 
+      await api.post(routes.auth.logout)
     } catch (error) {
-      // Handle logout error
       console.error('Error logging out:', error)
-      setUser(null) // Ensure user state is cleared even if logout fails
     } finally {
-      setUser(null) // Clear user state on logout
+      clearAuthToken()
+      setUser(null)
     }
   }
 

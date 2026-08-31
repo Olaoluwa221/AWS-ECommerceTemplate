@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { formatCurrency } from '../utils/formatCurrency'
@@ -25,7 +26,7 @@ export default function Cart() {
 
   const fetchCart = async () => {
     try {
-      const res = await api.get('/cart')
+      const res = await api.get(routes.cart.base)
       setCart(res.data)
     } catch {
       showToast('Failed to load cart', 'error')
@@ -36,7 +37,7 @@ export default function Cart() {
 
   const handleUpdateQuantity = async (variantId, quantity) => {
     try {
-      await api.put(`/cart/items/${variantId}`, { quantity })
+      await api.put(routes.cart.itemById(variantId), { quantity })
       fetchCart()
     } catch {
       showToast('Failed to update quantity', 'error')
@@ -45,7 +46,7 @@ export default function Cart() {
 
   const handleRemove = async (variantId) => {
     try {
-      await api.delete(`/cart/items/${variantId}`)
+      await api.delete(routes.cart.itemById(variantId))
       showToast('Item removed')
       fetchCart()
     } catch {
@@ -56,7 +57,7 @@ export default function Cart() {
   const handleClear = async () => {
     if (!confirm('Clear your entire cart?')) return
     try {
-      await api.delete('/cart')
+      await api.delete(routes.cart.base)
       showToast('Cart cleared')
       fetchCart()
     } catch {

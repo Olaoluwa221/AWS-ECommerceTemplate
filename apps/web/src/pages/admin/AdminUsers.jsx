@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../api/axios'
+import { routes } from '../../api/routes'
 import { useToast } from '../../context/ToastContext'
 import { useAuth } from '../../context/AuthContext'
 
@@ -22,7 +23,7 @@ export default function AdminUsers() {
 
     const fetchUsers = async () => {
         try {
-            const res = await api.get('/auth/users')
+            const res = await api.get(routes.auth.users)
             setUsers(res.data)
         } catch {
             showToast('Failed to load users', 'error')
@@ -34,7 +35,7 @@ export default function AdminUsers() {
     const handleRoleUpdate = async (userId, newRole) => {
         setUpdatingRole(true)
         try {
-            await api.put(`/auth/users/${userId}/role`, { role: newRole })
+            await api.put(routes.auth.userRole(userId), { role: newRole })
             showToast('Role updated')
             fetchUsers()
             if (selectedUser?.userId === userId) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { formatCurrency } from '../utils/formatCurrency'
@@ -20,7 +21,7 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await api.get(`/products/${id}`)
+        const res = await api.get(routes.products.byId(id))
         setProduct(res.data)
         if (res.data.variants?.length > 0) {
           setSelectedVariant(res.data.variants[0])
@@ -43,7 +44,7 @@ export default function ProductDetail() {
     setAddingToCart(true)
     try {
       if (user) {
-        await api.post('/cart/items', {
+        await api.post(routes.cart.items, {
           variantId: selectedVariant.variantId,
           quantity
         })

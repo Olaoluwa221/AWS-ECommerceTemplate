@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import siteConfig from '../config/siteConfig'
@@ -38,7 +39,7 @@ function CheckoutForm({ cart, user, deliveryMethod, setDeliveryMethod, paymentIn
 
       let res
       if (user) {
-        res = await api.post('/orders/checkout', {
+        res = await api.post(routes.orders.checkout, {
           guestEmail: null,
           cartItems: null,
           deliveryMethod: deliveryMethod === 'pickup' ? 'Pickup' : 'Shipping',
@@ -52,7 +53,7 @@ function CheckoutForm({ cart, user, deliveryMethod, setDeliveryMethod, paymentIn
           zip: deliveryMethod === 'shipping' ? form.zip : null,
         })
       } else {
-        res = await api.post('/orders/checkout', {
+        res = await api.post(routes.orders.checkout, {
           guestEmail: form.email,
           cartItems: cart.items.map(item => ({
             variantId: item.variantId,
@@ -324,7 +325,7 @@ export default function Checkout() {
       try {
         let cartData
         if (user) {
-          const res = await api.get('/cart')
+          const res = await api.get(routes.cart.base)
           if (!res.data || res.data.items.length === 0) {
             navigate('/cart')
             return
@@ -378,7 +379,7 @@ export default function Checkout() {
         }
 
         // Single round-trip: create-intent both calculates tax and gives us a fresh intent.
-        const intentRes = await api.post('/payments/create-intent', payload)
+        const intentRes = await api.post(routes.payments.createIntent, payload)
         setClientSecret(intentRes.data.clientSecret)
         setPaymentIntentId(intentRes.data.paymentIntentId)
         setTaxQuote(intentRes.data.taxQuote)

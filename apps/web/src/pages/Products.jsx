@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 import { formatCurrency } from '../utils/formatCurrency'
 import { SkeletonCard } from '../components/Skeleton'
 
@@ -15,8 +16,8 @@ export default function Products() {
     const fetchData = async () => {
       try {
         const [productsRes, typesRes] = await Promise.all([
-          api.get('/products'),
-          api.get('/producttypes')
+          api.get(routes.products.list),
+          api.get(routes.products.productTypes)
         ])
         setProducts(productsRes.data)
         setProductTypes(typesRes.data)

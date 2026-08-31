@@ -29,6 +29,7 @@ export const routes = {
     createVariant: (productId) => `/products/${productId}/variants`,
   },
   orders: {
+    list: '/orders',
     all: '/orders/all',
     checkout: '/orders/checkout',
     byId: (orderId) => `/orders/${orderId}`,

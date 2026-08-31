@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 
 export default function Unsubscribe() {
   const { token } = useParams()
@@ -11,7 +12,7 @@ export default function Unsubscribe() {
   useEffect(() => {
     const unsubscribe = async () => {
       try {
-        const res = await api.post(`/auth/unsubscribe/${token}`)
+        const res = await api.post(routes.auth.unsubscribe(token))
         setEmail(res.data?.email ?? null)
         setMessage(res.data?.message ?? 'You have been unsubscribed.')
         setStatus('success')

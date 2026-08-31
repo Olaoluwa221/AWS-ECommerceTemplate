@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -11,7 +12,7 @@ export default function ForgotPassword() {
     e.preventDefault()
     setLoading(true)
     try {
-      await api.post('/auth/forgot-password', { email })
+      await api.post(routes.auth.forgotPassword, { email })
       setSent(true)
     } catch {
       setSent(true) // Still show success to prevent email enumeration

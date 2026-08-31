@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
+import { routes } from '../api/routes'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -26,7 +27,7 @@ export default function ResetPassword() {
 
     setLoading(true)
     try {
-      await api.post('/auth/reset-password', {
+      await api.post(routes.auth.resetPassword, {
         token,
         newPassword: form.password
       })

@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import BackToTop from './components/BackToTop'
 import PageTransition from './components/PageTransition'
+import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -21,15 +21,6 @@ import UploadArtwork from './pages/UploadArtwork'
 import Unsubscribe from './pages/Unsubscribe'
 import AdminUsers from './pages/admin/AdminUsers'
 
-function ProtectedRoute({ children, adminOnly = false }) {
-  const { user, authLoading } = useAuth()
-
-  if (authLoading) return null
-  if (!user) return <Navigate to="/login" />
-  if (adminOnly && user.userType !== 'admin') return <Navigate to="/" />
-  return children
-}
-
 function App() {
   return (
     <BrowserRouter>
@@ -37,29 +28,29 @@ function App() {
       <PageTransition>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<GuestOnlyRoute><Login /></GuestOnlyRoute>} />
+          <Route path="/register" element={<GuestOnlyRoute><Register /></GuestOnlyRoute>} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/admin/emails" element={<ProtectedRoute><AdminEmails /></ProtectedRoute>} />
+          <Route path="/admin/emails" element={<AdminRoute><AdminEmails /></AdminRoute>} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/upload-artwork/:token" element={<UploadArtwork />} />
           <Route path="/unsubscribe/:token" element={<Unsubscribe />} />
-          <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
           <Route path="/profile" element={
             <ProtectedRoute><Profile /></ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>
+            <AdminRoute><AdminDashboard /></AdminRoute>
           } />
           <Route path="/admin/products" element={
-            <ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>
+            <AdminRoute><AdminProducts /></AdminRoute>
           } />
           <Route path="/admin/orders" element={
-            <ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>
+            <AdminRoute><AdminOrders /></AdminRoute>
           } />
         </Routes>
       </PageTransition>
