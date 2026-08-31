@@ -73,7 +73,9 @@ export const siteConfig = {
       headingLine1: 'Small shop. Real hands.',
       headingLine2: 'No middlemen.',
       items: [
-        { num: '01', title: 'Follow', desc: 'Template' },
+        { num: '01', title: 'Manifesto1Title', desc: 'Manifesto 1 Description' },
+        { num: '02', title: 'Manifesto2Title', desc: 'Manifesto 2 Description' },
+        { num: '03', title: 'Manifesto3Title', desc: 'Manifesto 3 Description' },
       ],
     },
     cta: {
