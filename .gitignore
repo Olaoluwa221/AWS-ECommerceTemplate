@@ -26,11 +26,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
 # Temporary files
 tmp/
 temp/
 uploads/
+
+.temp
+.tmp
 
 # AWS
 .aws/
@@ -42,7 +46,6 @@ uploads/
 
 # IDE / OS
 .idea/
-.vscode/*
 !.vscode/extensions.json
 .DS_Store
 *.suo
@@ -50,6 +53,18 @@ uploads/
 *.njsproj
 *.sln
 *.sw?
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 #Tool cache
 .cache/
@@ -57,3 +72,16 @@ uploads/
 
 #Typescript
 *.tsbuildinfo
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Tests
+coverage/
+.nyc_output/
