@@ -1,0 +1,12 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: ecommerce-mongodb
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    env_file:
+      - ./infra/mongo/.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
