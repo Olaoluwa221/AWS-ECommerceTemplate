@@ -7,6 +7,9 @@ services:
       - 27017:27017
     env_file:
       - ./infra/mongo/.env
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+
+
+volumes:
+  mongo-data:

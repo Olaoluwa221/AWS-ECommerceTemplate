@@ -20,23 +20,37 @@ type CreateUserInput = {
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-  ) {}
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+  ) { }
 
-  async create(createUserDto: CreateUserInput): Promise<UserDocument> {
-    const user = new this.userModel(createUserDto);
-    
+  // Create a new user in the database.
+  async create(createUserInput: CreateUserInput): Promise<UserDocument> {
+    const user = new this.userModel(createUserInput);
+
     return user.save();
   }
 
+  // Find a user by their unique identifier (ID).
   async findById(id: string | Types.ObjectId): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
   }
 
+  // Find a user by email, normalizing the email to lowercase and trimming whitespace.
   async findByEmail(email: string): Promise<UserDocument | null> {
-    return this.userModel.findOne({ email: email.toLowerCase() }).exec();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    return this.userModel.findOne({ email: normalizedEmail }).exec();
   }
 
+  // Find a user by email and include the password hash in the result.
+  async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    return this.userModel.findOne({ email: normalizedEmail }).select('+passwordHash').exec();
+  }
+
+  // Update a user's profile information based on their ID and the provided update data.
   async updateProfile(
     id: string | Types.ObjectId,
     updateUserDto: UpdateUserDto,
