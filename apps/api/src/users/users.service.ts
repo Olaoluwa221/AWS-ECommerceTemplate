@@ -6,13 +6,14 @@ import { AddAddressDto } from './dto/add-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schema/user.schema';
+import { UserRole } from './enums/user-role.enum';
 
-type CreateUserDto = {
+type CreateUserInput = {
   firstName: string;
   lastName: string;
   email: string;
   passwordHash: string;
-  role?: string;
+  role?: UserRole;
   isActive?: boolean;
 };
 
@@ -22,8 +23,9 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
+  async create(createUserDto: CreateUserInput): Promise<UserDocument> {
     const user = new this.userModel(createUserDto);
+    
     return user.save();
   }
 
