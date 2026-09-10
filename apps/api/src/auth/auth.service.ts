@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserDocument } from '../users/schema/user.schema';
 import { AuthResult } from './types/authentication-result.types';
 import { SafeUser } from './types/safe-user.types';
+import { toSafeUser } from './mappers/to-safe-user.mapper';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +41,7 @@ export class AuthService {
             const token = await this.generateJwtToken(newUser);
 
             return {
-                user: this.toSafeUser(newUser),
+                user: toSafeUser(newUser),
                 accessToken: token
             };
         } catch (error: unknown) {
@@ -49,18 +50,6 @@ export class AuthService {
             }
             throw error;
         }
-    }
-
-    private toSafeUser(user: UserDocument): SafeUser {
-        const safeUser: SafeUser = {
-            id: user._id.toString(),
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            role: user.role,
-            isActive: user.isActive,
-        };
-        return safeUser;
     }
 
     private async generateJwtToken(user: SafeUser): Promise<string> {
@@ -94,7 +83,7 @@ export class AuthService {
         if (!user.isActive) {
             return null;
         }
-        return this.toSafeUser(user);
+        return toSafeUser(user);
     }
 
     async login(loginDto: LoginDto): Promise<AuthResult> {

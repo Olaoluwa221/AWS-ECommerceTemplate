@@ -3,6 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { UsersService } from "../../users/users.service";
 import { AuthenticatedRequest } from "../types/authenticated-request.types";
 import { JwtPayload } from "../types/jwt-payload.types";
+import { toSafeUser } from "../mappers/to-safe-user.mapper";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -29,14 +30,7 @@ export class AuthGuard implements CanActivate {
             throw new UnauthorizedException('User not found or inactive.');
         }
 
-        request.user = {
-            id: user._id.toString(),
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            role: user.role,
-            isActive: user.isActive,
-        };
+        request.user = toSafeUser(user);
 
         return true;
     }
