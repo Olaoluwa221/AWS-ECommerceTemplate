@@ -6,20 +6,8 @@ import { UserRole } from '../users/enums/user-role.enum';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserDocument } from '../users/schema/user.schema';
-
-export type SafeUser = {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: UserRole;
-    isActive: boolean;
-};
-
-export type AuthResult = {
-    user: SafeUser;
-    accessToken: string;
-};
+import { AuthResult } from './types/authentication-result.types';
+import { SafeUser } from './types/safe-user.types';
 
 @Injectable()
 export class AuthService {

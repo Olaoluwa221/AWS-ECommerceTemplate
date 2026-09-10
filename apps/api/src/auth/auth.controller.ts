@@ -1,9 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
-import { AuthService, SafeUser } from './auth.service';
+import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
 import express from 'express';
 import { LoginDto } from './dto/login.dto';
+import { AuthGuard } from './guards/auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { SafeUser } from './types/safe-user.types';
 
 @Controller('auth')
 export class AuthController {
@@ -36,13 +39,31 @@ export class AuthController {
         return result.user;
     }
 
-    // @Get('me')
-    // @UseGuards(AuthGuard)
-    // getCurrentUser(
-    //     @CurrentUser() user: SafeUser,
-    // ): SafeUser {
-    //     return user;
-    // }
+    @Get('me')
+    @UseGuards(AuthGuard)
+    getCurrentUser(
+        @CurrentUser() user: SafeUser,
+    ): SafeUser {
+        return user;
+    }
+
+    @Post('logout')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    logout(
+        @Res({ passthrough: true }) response: express.Response,
+    ): void {
+        response.clearCookie('access_token', {
+            httpOnly: true,
+
+            secure:
+                this.configService.get<string>('NODE_ENV') ===
+                'production',
+
+            sameSite: 'lax',
+
+            path: '/',
+        });
+    }
 
     private setAuthCookie(response: express.Response, accessToken: string) {
         const expiresIn = Number(
