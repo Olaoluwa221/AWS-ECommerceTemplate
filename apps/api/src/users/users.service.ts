@@ -14,6 +14,7 @@ type CreateUserInput = {
   email: string;
   passwordHash: string;
   role?: UserRole;
+  marketingOptIn?: boolean;
   isActive?: boolean;
 };
 

@@ -1,5 +1,7 @@
 import {
+    IsBoolean,
     IsEmail,
+    IsOptional,
     IsString,
     MaxLength,
     MinLength,
@@ -23,4 +25,8 @@ export class RegisterDto {
     @MinLength(8)
     @MaxLength(128)
     password: string;
+
+    @IsBoolean()
+    @IsOptional()
+    marketingOptIn?: boolean;
 }

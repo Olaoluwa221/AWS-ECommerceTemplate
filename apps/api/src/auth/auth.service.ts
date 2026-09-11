@@ -32,6 +32,7 @@ export class AuthService {
                 lastName: registerUserDto.lastName.trim(),
                 email: email,
                 passwordHash: passwordHash,
+                marketingOptIn: registerUserDto.marketingOptIn ?? false,
 
                 role: UserRole.CUSTOMER, // Default role for new users
                 isActive: true, // Default to active
