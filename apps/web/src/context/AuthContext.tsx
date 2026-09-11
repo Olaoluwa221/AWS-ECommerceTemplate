@@ -6,13 +6,14 @@ import {
   type ReactNode,
 } from 'react'
 
-import api, { clearAuthToken, setAuthToken } from '../api/axios'
+import api from '../api/axios'
 import { routes } from '../api/routes'
-import type { AuthUser, LoginPayload } from '../types/domain'
+import type { AuthUser } from '../types/domain'
+import axios from 'axios'
 
 type AuthContextValue = {
   user: AuthUser | null
-  login: (_payload: LoginPayload | AuthUser | null | undefined) => void
+  login: (user: AuthUser) => void
   logout: () => Promise<void>
   authLoading: boolean
 }
@@ -28,21 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const restoreSession = async () => {
       try {
-        const res = await api.get(routes.auth.me)
+        const res =
+          await api.get<AuthUser>(routes.auth.me)
 
-        if (!cancelled && res.data.user) {
-          setUser(res.data.user as AuthUser)
+        if (!cancelled) {
+          setUser(res.data)
         }
       } catch (error: unknown) {
         if (!cancelled) {
           setUser(null)
         }
 
-        const status = error && typeof error === 'object' && 'response' in error
-          ? (error as { response?: { status?: number } }).response?.status
-          : undefined
-
-        if (status !== 400) {
+        if (!axios.isAxiosError(error) || error.response?.status !== 401) {
           console.error('Error restoring session:', error)
         }
       } finally {
@@ -59,17 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = (data: LoginPayload | AuthUser | null | undefined) => {
-    const token = data && 'token' in data ? data.token : undefined
-    const accessToken = data && 'accessToken' in data ? data.accessToken : undefined
-    const candidateUser = data && 'user' in data ? data.user : data
-    const nextUser = candidateUser && typeof candidateUser === 'object' ? (candidateUser as AuthUser) : null
-
-    if (token || accessToken) {
-      setAuthToken(String(token ?? accessToken))
-    }
-
-    setUser(nextUser)
+  const login = (user: AuthUser) => {
+    setUser(user)
   }
 
   const logout = async () => {
@@ -78,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error logging out:', error)
     } finally {
-      clearAuthToken()
       setUser(null)
     }
   }

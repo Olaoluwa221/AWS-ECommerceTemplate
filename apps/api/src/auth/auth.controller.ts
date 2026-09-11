@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
@@ -41,6 +41,7 @@ export class AuthController {
 
     @Get('me')
     @UseGuards(AuthGuard)
+    @Header('Cache-Control', 'no-store')
     getCurrentUser(
         @CurrentUser() user: SafeUser,
     ): SafeUser {

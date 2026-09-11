@@ -5,7 +5,6 @@ import * as argon2 from 'argon2';
 import { UserRole } from '../users/enums/user-role.enum';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { UserDocument } from '../users/schema/user.schema';
 import { AuthResult } from './types/authentication-result.types';
 import { SafeUser } from './types/safe-user.types';
 import { toSafeUser } from './mappers/to-safe-user.mapper';
@@ -38,10 +37,11 @@ export class AuthService {
                 isActive: true, // Default to active
             });
 
-            const token = await this.generateJwtToken(newUser);
+            const newSafeUser = toSafeUser(newUser);
+            const token = await this.generateJwtToken(newSafeUser);
 
             return {
-                user: toSafeUser(newUser),
+                user: newSafeUser,
                 accessToken: token
             };
         } catch (error: unknown) {

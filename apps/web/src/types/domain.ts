@@ -105,15 +105,13 @@ export type ProfileUser = {
   [key: string]: unknown
 }
 
-export type AuthUser = ProfileUser & {
-  [key: string]: unknown
-}
-
-export type LoginPayload = {
-  token?: string
-  accessToken?: string
-  user?: AuthUser
-  [key: string]: unknown
+export type AuthUser = {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  role: UserRole
+  isActive: boolean
 }
 
 export type CheckoutFormState = {
