@@ -12,6 +12,7 @@ import { AuthGuard } from './guards/auth.guard';
     UsersModule,
 
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
 
       inject: [ConfigService],

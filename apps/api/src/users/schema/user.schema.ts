@@ -40,6 +40,13 @@ export class User {
     })
     role: UserRole;
 
+    // Property to store whether the user has opted in for marketing communications
+    @Prop({
+        type: Boolean,
+        default: false
+    })
+    marketingOptIn: boolean;
+
     // Property to store the shipping addresses of the user
     @Prop({
         type: [AddressSchema],
@@ -54,7 +61,10 @@ export class User {
     })
     billingAddress?: Address | null;
 
-    @Prop({ default: true })
+    @Prop({
+        type: Boolean,
+        default: true
+    })
     isActive: boolean;
 }
 

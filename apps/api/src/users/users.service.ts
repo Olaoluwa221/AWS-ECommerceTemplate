@@ -4,7 +4,7 @@ import { Model, Types } from 'mongoose';
 
 import { AddAddressDto } from './dto/add-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User, UserDocument } from './schema/user.schema';
 import { UserRole } from './enums/user-role.enum';
 
@@ -54,11 +54,11 @@ export class UsersService {
   // Update a user's profile information based on their ID and the provided update data.
   async updateProfile(
     id: string | Types.ObjectId,
-    updateUserDto: UpdateUserDto,
+    updateProfileDto: UpdateProfileDto,
   ): Promise<UserDocument> {
     const user = await this.userModel
-      .findByIdAndUpdate(id, updateUserDto, {
-        new: true,
+      .findByIdAndUpdate(id, updateProfileDto, {
+        returnDocument: 'after',
         runValidators: true,
       })
       .exec();

@@ -82,10 +82,11 @@ export default function Profile() {
     fetchMe()
   }, [])
 
+  // Handle name change
   const handleSaveName = async () => {
     setSavingName(true)
     try {
-      await api.put(routes.auth.updateProfile, nameForm)
+      await api.patch(routes.users.updateProfile, nameForm)
       showToast('Name updated!')
       setEditingName(false)
     } catch {
@@ -95,6 +96,7 @@ export default function Profile() {
     }
   }
 
+  // Handle password change
   const handleSavePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       showToast('Passwords do not match', 'error')
@@ -120,10 +122,11 @@ export default function Profile() {
     }
   }
 
+  // Handle marketing opt-in toggle
   const handleOptInToggle = async () => {
     setUpdatingOptIn(true)
     try {
-      const res = await api.put(routes.auth.marketingOptIn, !marketingOptIn, {
+      const res = await api.patch(routes.users.updateProfile, { marketingOptIn: !marketingOptIn }, {
         headers: { 'Content-Type': 'application/json' }
       })
       setMarketingOptIn(res.data.marketingOptIn)
@@ -220,7 +223,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">Account type</p>
-                <p className="text-sm font-medium capitalize" style={{ color: 'var(--brand-primary)' }}>{user?.userType ?? 'customer'}</p>
+                <p className="text-sm font-medium capitalize" style={{ color: 'var(--brand-primary)' }}>{user?.role ?? 'customer'}</p>
               </div>
             </div>
           )}
