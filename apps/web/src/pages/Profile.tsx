@@ -108,7 +108,7 @@ export default function Profile() {
     }
     setSavingPassword(true)
     try {
-      await api.put(routes.auth.updatePassword, {
+      await api.patch(routes.auth.updatePassword, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       })

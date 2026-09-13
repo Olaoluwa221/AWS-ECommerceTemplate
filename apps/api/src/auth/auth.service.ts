@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import * as argon2 from 'argon2';
@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthResult } from './types/authentication-result.types';
 import { SafeUser } from './types/safe-user.types';
 import { toSafeUser } from './mappers/to-safe-user.mapper';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,12 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService
     ) { }
+
+    /*
+        * Public methods for authentication and user management
+    */
+
+    // Register a new user and return authentication result
     async registerUser(registerUserDto: RegisterDto): Promise<AuthResult> {
         const email = registerUserDto.email.trim().toLowerCase();
 
@@ -53,22 +60,7 @@ export class AuthService {
         }
     }
 
-    private async generateJwtToken(user: SafeUser): Promise<string> {
-        const payload = {
-            sub: user.id,
-            role: user.role
-        };
-
-        return this.jwtService.signAsync(payload);
-    }
-
-    private isDuplicateKeyError(error: unknown): boolean {
-        if (typeof error !== 'object' || error === null || !('code' in error)) {
-            return false;
-        }
-        return (error as { code?: number }).code === 11000; // MongoDB duplicate key error code
-    }
-
+    // Validate user credentials and return a SafeUser if valid, otherwise return null
     async validateUser(email: string, password: string): Promise<SafeUser | null> {
         const user = await this.usersService.findByEmailWithPassword(email);
 
@@ -87,6 +79,7 @@ export class AuthService {
         return toSafeUser(user);
     }
 
+    // Handle user login and return authentication result
     async login(loginDto: LoginDto): Promise<AuthResult> {
         const user = await this.validateUser(
             loginDto.email,
@@ -102,5 +95,51 @@ export class AuthService {
             accessToken: await this.generateJwtToken(user)
         };
         return result;
+    }
+
+    async changePassword(userId: string, updatePasswordDto: UpdatePasswordDto): Promise<void> {
+        const user = await this.usersService.findByIdWithPassword(userId);
+
+        if (!user) {
+            throw new UnauthorizedException('User not found.');
+        }
+
+        const isCurrentPasswordValid = await argon2.verify(
+            user.passwordHash,
+            updatePasswordDto.currentPassword,
+        );
+
+        if (!isCurrentPasswordValid) {
+            throw new UnauthorizedException('Current password is incorrect.');
+        }
+
+        if (updatePasswordDto.currentPassword === updatePasswordDto.newPassword) {
+            throw new BadRequestException('New password must be different from the current password.');
+        }
+
+        const passwordHash = await argon2.hash(updatePasswordDto.newPassword);
+        await this.usersService.updatePassword(userId, passwordHash);
+    }
+
+    /*
+        * Private helper methods for internal use only
+    */
+
+    // Generate a JWT token for the authenticated user
+    private async generateJwtToken(user: SafeUser): Promise<string> {
+        const payload = {
+            sub: user.id,
+            role: user.role
+        };
+
+        return this.jwtService.signAsync(payload);
+    }
+
+    // Check if the error is a MongoDB duplicate key error
+    private isDuplicateKeyError(error: unknown): boolean {
+        if (typeof error !== 'object' || error === null || !('code' in error)) {
+            return false;
+        }
+        return (error as { code?: number }).code === 11000; // MongoDB duplicate key error code
     }
 }

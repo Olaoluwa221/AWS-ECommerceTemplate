@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, HttpStatus, Patch, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
@@ -7,6 +7,10 @@ import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { SafeUser } from './types/safe-user.types';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { UserRole } from '../users/enums/user-role.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -48,6 +52,17 @@ export class AuthController {
         return user;
     }
 
+    @Patch('update-password')
+    @UseGuards(AuthGuard)
+    async updatePassword(
+        @CurrentUser() user: SafeUser,
+        @Body() updatePasswordDto: UpdatePasswordDto,
+    ): Promise<{ message: string }> {
+        await this.authService.changePassword(user.id, updatePasswordDto);
+
+        return { message: 'Password updated successfully.' };
+    }
+
     @Post('logout')
     @HttpCode(HttpStatus.NO_CONTENT)
     logout(
@@ -82,5 +97,12 @@ export class AuthController {
         });
     }
 
-
+    @Get('admin-test')
+    @UseGuards(AuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    adminTest() {
+        return {
+            message: 'Admin access granted.',
+        };
+    }
 }

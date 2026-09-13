@@ -37,6 +37,11 @@ export class UsersService {
     return this.userModel.findById(id).exec();
   }
 
+  // Find a user by ID and include the password hash in the result.
+  async findByIdWithPassword(id: string | Types.ObjectId): Promise<UserDocument | null> {
+    return this.userModel.findById(id).select('+passwordHash').exec();
+  }
+
   // Find a user by email, normalizing the email to lowercase and trimming whitespace.
   async findByEmail(email: string): Promise<UserDocument | null> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -138,6 +143,20 @@ export class UsersService {
 
     // TODO: assign proper billingAddress object.
     user.billingAddress = { ...addressDto } as any;
+    return user.save();
+  }
+
+  async updatePassword(
+    id: string | Types.ObjectId,
+    newPasswordHash: string,
+  ): Promise<UserDocument> {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    user.passwordHash = newPasswordHash;
     return user.save();
   }
 
