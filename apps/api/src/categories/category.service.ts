@@ -11,6 +11,7 @@ export class CategoryService {
         private readonly categoryModel: Model<CategoryDocument>,
     ) { }
 
+    // Create a new category in the database
     async create(createCategoryDto: CreateCategoryDto): Promise<CategoryDocument> {
         const name = createCategoryDto.name;
         const slug = this.createSlug(name)
@@ -73,6 +74,7 @@ export class CategoryService {
         }
     }
 
+    // Private helper function to create a slug from a product name
     private createSlug(name: string): string {
         return name
             .trim()
@@ -80,4 +82,35 @@ export class CategoryService {
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '');
     }
+
+    // Get all categories in the database
+    async findAll(): Promise<CategoryDocument[]> {
+        return this.categoryModel
+            .find({ isActive: true })
+            .sort({ name: 1 })
+            .exec();
+    }
+
+    // Get a specific category using it's slug
+    async findBySlug(slug: string): Promise<CategoryDocument> {
+        const category = await this.categoryModel
+            .findOne({
+                slug: slug.toLowerCase(),
+                isActive: true,
+            })
+            .exec();
+
+        if (!category) {
+            throw new NotFoundException(
+                `Category "${slug}" not found.`,
+            );
+        }
+
+        return category;
+    }
+
+    // // Get a specific category using it's id
+    // async findById(id: string | Types.ObjectId){
+    //     return this.categoryModel.findById(id).exec;
+    // }
 }
