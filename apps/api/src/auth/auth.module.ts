@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -29,13 +30,18 @@ import { RolesGuard } from './guards/roles.guard';
   ],
   providers: [
     AuthService,
-    AuthGuard,
-    RolesGuard
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
   ],
   exports: [
     AuthService,
-    AuthGuard,
-    RolesGuard
   ],
   controllers: [AuthController]
 })

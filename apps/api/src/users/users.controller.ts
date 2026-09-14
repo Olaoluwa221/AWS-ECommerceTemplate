@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -16,7 +16,6 @@ export class UsersController {
   // }
 
   @Patch('me')
-  @UseGuards(AuthGuard)
   async updateMe(
     @CurrentUser() user: SafeUser,
     @Body() updateUserDto: UpdateProfileDto,

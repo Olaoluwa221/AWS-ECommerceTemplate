@@ -4,12 +4,30 @@ import { UsersService } from "../../users/users.service";
 import { AuthenticatedRequest } from "../types/authenticated-request.types";
 import { JwtPayload } from "../types/jwt-payload.types";
 import { toSafeUser } from "../mappers/to-safe-user.mapper";
+import { Reflector } from "@nestjs/core";
+import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor(private readonly jwtService: JwtService, private readonly usersService: UsersService) {}
+    constructor(
+        private readonly jwtService: JwtService, 
+        private readonly usersService: UsersService, 
+        private readonly reflector: Reflector
+    ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
+        const isPublic =
+            this.reflector.getAllAndOverride<boolean>(
+                IS_PUBLIC_KEY,
+                [
+                    context.getHandler(),
+                    context.getClass(),
+                ],
+            );
+        if (isPublic) {
+            return true;
+        }
+
         const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
         const token = request.cookies?.access_token;
 
