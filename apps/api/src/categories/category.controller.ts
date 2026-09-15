@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, } from '@nestjs/comm
 import { CategoryService } from './category.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import { UserRole } from '../users/enums/user-role.enum';
 import { Public } from '../auth/decorators/public.decorator';
 
@@ -50,7 +51,12 @@ export class CategoryController {
   // Update a category
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  update() { }
+  update(
+    @Param('id') id: string,
+    @Body() updateCategoryDto: UpdateCategoryDto,
+  ) {
+    return this.categoryService.update(id, updateCategoryDto);
+  }
 
   // Dectivate a category
   @Patch(':id/deactivate')

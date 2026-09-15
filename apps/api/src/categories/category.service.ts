@@ -3,6 +3,7 @@ import { Model, Types } from 'mongoose';
 import { Category, CategoryDocument } from './schemas/category.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -11,62 +12,169 @@ export class CategoryService {
         private readonly categoryModel: Model<CategoryDocument>,
     ) { }
 
-    // Create a new category in the database
-    async create(createCategoryDto: CreateCategoryDto): Promise<CategoryDocument> {
-        const name = createCategoryDto.name;
-        const slug = this.createSlug(name)
+    // Create a category
+    async create(
+        createCategoryDto: CreateCategoryDto,
+    ): Promise<CategoryDocument> {
+        const { name, slug } =
+            this.prepareNameAndSlug(createCategoryDto.name);
 
-        // Validate slug format
+        await this.validateUniqueSlug(name, slug);
+
+        const parentCategory =
+            await this.resolveParentCategory(
+                createCategoryDto.parentCategory,
+            );
+
+        const category = new this.categoryModel({
+            name,
+            slug,
+            description: this.normalizeDescription(
+                createCategoryDto.description,
+            ),
+            parentCategory,
+        });
+
+        return this.saveCategory(category);
+    }
+
+    // Update a category
+    async update(
+        id: string,
+        updateCategoryDto: UpdateCategoryDto,
+    ): Promise<CategoryDocument> {
+        const category = await this.findByIdOrThrow(id);
+
+        if (updateCategoryDto.name !== undefined) {
+            const { name, slug } =
+                this.prepareNameAndSlug(updateCategoryDto.name);
+
+            await this.validateUniqueSlug(
+                name,
+                slug,
+                category._id,
+            );
+
+            category.name = name;
+            category.slug = slug;
+        }
+
+        if (updateCategoryDto.description !== undefined) {
+            category.description = this.normalizeDescription(
+                updateCategoryDto.description,
+            );
+        }
+
+        return this.saveCategory(category);
+    }
+
+    // Generate name and slug
+    private prepareNameAndSlug(name: string): {
+        name: string;
+        slug: string;
+    } {
+        const normalizedName = name.trim();
+        const slug = this.createSlug(normalizedName);
+
         if (!slug) {
             throw new BadRequestException(
                 'Category name must contain letters or numbers.',
             );
         }
 
-        //Validate unique category
-        const existingCategory = await this.categoryModel.exists({
+        return {
+            name: normalizedName,
             slug,
-        });
+        };
+    }
+
+    // Validate slug
+    private async validateUniqueSlug(
+        name: string,
+        slug: string,
+        excludeCategoryId?: Types.ObjectId,
+    ): Promise<void> {
+        const query: {
+            slug: string;
+            _id?: { $ne: Types.ObjectId };
+        } = {
+            slug,
+        };
+
+        if (excludeCategoryId) {
+            query._id = {
+                $ne: excludeCategoryId,
+            };
+        }
+
+        const existingCategory =
+            await this.categoryModel.exists(query);
 
         if (existingCategory) {
             throw new ConflictException(
                 `Category "${name}" already exists.`,
             );
         }
+    }
 
-        let parentCategory: Types.ObjectId | null = null;
+    //Ensure Parent category is valid
+    private async resolveParentCategory(
+        parentCategoryId?: string,
+    ): Promise<Types.ObjectId | null> {
+        if (!parentCategoryId) {
+            return null;
+        }
 
-        if (createCategoryDto.parentCategory) {
-            const parentExists = await this.categoryModel.exists({
-                _id: createCategoryDto.parentCategory,
+        const parentExists =
+            await this.categoryModel.exists({
+                _id: parentCategoryId,
             });
 
-            if (!parentExists) {
-                throw new NotFoundException(
-                    `Parent category with id ${createCategoryDto.parentCategory} not found.`,
-                );
-            }
-
-            parentCategory = new Types.ObjectId(
-                createCategoryDto.parentCategory,
+        if (!parentExists) {
+            throw new NotFoundException(
+                `Parent category with id ${parentCategoryId} not found.`,
             );
         }
 
+        return new Types.ObjectId(parentCategoryId);
+    }
 
-        const category = new this.categoryModel({
-            name,
-            slug,
-            description:
-                createCategoryDto.description?.trim() || undefined,
-            parentCategory,
-        });
+    private async findByIdOrThrow(
+        id: string,
+    ): Promise<CategoryDocument> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException(
+                `Invalid category id "${id}".`,
+            );
+        }
 
+        const category =
+            await this.categoryModel.findById(id);
+
+        if (!category) {
+            throw new NotFoundException(
+                `Category with id "${id}" not found.`,
+            );
+        }
+
+        return category;
+    }
+
+    private normalizeDescription(
+        description?: string,
+    ): string | undefined {
+        return description?.trim() || undefined;
+    }
+
+    private async saveCategory(
+        category: CategoryDocument,
+    ): Promise<CategoryDocument> {
         try {
             return await category.save();
         } catch (error) {
             if ((error as { code?: number }).code === 11000) {
                 throw new ConflictException(
-                    `Category "${name}" already exists.`,
+                    `Category "${category.name}" already exists.`,
                 );
             }
 
@@ -82,13 +190,22 @@ export class CategoryService {
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '');
     }
-
     // Get all active categories in the database
     async findAllActive(): Promise<CategoryDocument[]> {
-        return this.categoryModel
+        const categories = await this.categoryModel
             .find({ isActive: true })
             .sort({ name: 1 })
             .exec();
+
+        const visibleCategories: CategoryDocument[] = [];
+
+        for (const category of categories) {
+            if (await this.isEffectivelyActive(category)) {
+                visibleCategories.push(category);
+            }
+        }
+
+        return visibleCategories;
     }
 
     // Get all categories in the database
@@ -100,6 +217,31 @@ export class CategoryService {
                 name: 1,
             })
             .exec();
+    }
+
+    private async isEffectivelyActive(
+        category: CategoryDocument,
+    ): Promise<boolean> {
+        if (!category.isActive) {
+            return false;
+        }
+
+        let parentId = category.parentCategory;
+
+        while (parentId) {
+            const parent = await this.categoryModel
+                .findById(parentId)
+                .select('isActive parentCategory')
+                .lean();
+
+            if (!parent || !parent.isActive) {
+                return false;
+            }
+
+            parentId = parent.parentCategory;
+        }
+
+        return true;
     }
 
     // Get a specific category using it's slug
