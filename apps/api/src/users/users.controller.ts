@@ -1,6 +1,5 @@
 import { Body, Controller, Patch, } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { SafeUser } from '../auth/types/safe-user.types';
 import { UpdateProfileDto } from './dto/update-profile.dto';

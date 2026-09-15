@@ -34,7 +34,7 @@ export class CategoryService {
             );
         }
 
-        let parentCategoryId: Types.ObjectId | null = null;
+        let parentCategory: Types.ObjectId | null = null;
 
         if (createCategoryDto.parentCategory) {
             const parentExists = await this.categoryModel.exists({
@@ -47,7 +47,7 @@ export class CategoryService {
                 );
             }
 
-            parentCategoryId = new Types.ObjectId(
+            parentCategory = new Types.ObjectId(
                 createCategoryDto.parentCategory,
             );
         }
@@ -58,7 +58,7 @@ export class CategoryService {
             slug,
             description:
                 createCategoryDto.description?.trim() || undefined,
-            parentCategoryId,
+            parentCategory,
         });
 
         try {
@@ -109,6 +109,81 @@ export class CategoryService {
         return category;
     }
 
+    // Deactivate a category
+    async deactivate(id: string): Promise<CategoryDocument> {
+        const category = await this.categoryModel.findById(id);
+
+        if (!category) {
+            throw new NotFoundException('Category not found.');
+        }
+
+        if (!category.isActive) {
+            return category;
+        }
+
+        category.isActive = false;
+
+        return category.save();
+    }
+
+    // Reactivate a category
+    async reactivate(id: string): Promise<CategoryDocument> {
+        const category = await this.categoryModel.findById(id);
+
+        if (!category) {
+            throw new NotFoundException('Category not found.');
+        }
+
+        if (category.isActive) {
+            return category;
+        }
+
+        category.isActive = true;
+
+        return category.save();
+    }
+
+    async remove(id: string): Promise<void> {
+        // Validate MongoDB ObjectId before querying
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException(
+                `Invalid category id "${id}".`,
+            );
+        }
+
+        // Make sure the category exists
+        const category = await this.categoryModel
+            .findById(id)
+            .exec();
+
+        if (!category) {
+            throw new NotFoundException(
+                `Category with id "${id}" not found.`,
+            );
+        }
+
+        // Require deactivation before permanent deletion
+        if (category.isActive) {
+            throw new ConflictException(
+                'Category must be deactivated before it can be permanently deleted.',
+            );
+        }
+
+        // Don't allow deletion if other categories depend on it
+        const childCategoryExists =
+            await this.categoryModel.exists({
+                parentCategory: category._id,
+            });
+
+        if (childCategoryExists) {
+            throw new ConflictException(
+                'Category cannot be deleted while it has child categories.',
+            );
+        }
+
+        // Permanently remove the document
+        await category.deleteOne();
+    }
     // // Get a specific category using it's id
     // async findById(id: string | Types.ObjectId){
     //     return this.categoryModel.findById(id).exec;

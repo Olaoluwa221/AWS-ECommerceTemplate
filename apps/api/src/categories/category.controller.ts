@@ -1,7 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, } from '@nestjs/common';
 import { CategoryService } from './category.service';
-import { AuthGuard } from '../auth/guards/auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UserRole } from '../users/enums/user-role.enum';
@@ -25,12 +23,12 @@ export class CategoryController {
   @Public()
   findAll() {
     return this.categoryService.findAll();
-   }
+  }
 
   @Get(':slug')
   @Public()
   findBySlug(
-    @Param('slug') slug:string
+    @Param('slug') slug: string
   ) {
     return this.categoryService.findBySlug(slug);
   }
@@ -47,7 +45,24 @@ export class CategoryController {
   @Roles(UserRole.ADMIN)
   update() { }
 
+  // Dectivate a category
+  @Patch(':id/deactivate')
+  @Roles(UserRole.ADMIN)
+  deactivate(@Param('id') id: string) {
+    return this.categoryService.deactivate(id);
+  }
+
+  // Reactivate a category
+  @Patch(':id/reactivate')
+  @Roles(UserRole.ADMIN)
+  reactivate(@Param('id') id: string) {
+    return this.categoryService.reactivate(id);
+  }
+
+  // Totally delete a category
   @Delete(':id')
   @Roles(UserRole.ADMIN)
-  remove() { }
+  remove(@Param('id') id: string) {
+    return this.categoryService.remove(id);
+  }
 }
