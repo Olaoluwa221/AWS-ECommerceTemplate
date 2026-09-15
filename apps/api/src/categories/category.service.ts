@@ -83,11 +83,22 @@ export class CategoryService {
             .replace(/^-+|-+$/g, '');
     }
 
-    // Get all categories in the database
-    async findAll(): Promise<CategoryDocument[]> {
+    // Get all active categories in the database
+    async findAllActive(): Promise<CategoryDocument[]> {
         return this.categoryModel
             .find({ isActive: true })
             .sort({ name: 1 })
+            .exec();
+    }
+
+    // Get all categories in the database
+    async findAllAdmin(): Promise<CategoryDocument[]> {
+        return this.categoryModel
+            .find()
+            .sort({
+                isActive: -1,
+                name: 1,
+            })
             .exec();
     }
 
@@ -143,6 +154,7 @@ export class CategoryService {
         return category.save();
     }
 
+    // Delete a category permanently
     async remove(id: string): Promise<void> {
         // Validate MongoDB ObjectId before querying
         if (!Types.ObjectId.isValid(id)) {

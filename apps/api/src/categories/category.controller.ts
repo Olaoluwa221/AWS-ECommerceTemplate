@@ -21,8 +21,14 @@ export class CategoryController {
 
   @Get()
   @Public()
+  findAllActive() {
+    return this.categoryService.findAllActive();
+  }
+
+  @Get('admin/all')
+  @Roles(UserRole.ADMIN)
   findAll() {
-    return this.categoryService.findAll();
+    return this.categoryService.findAllAdmin();
   }
 
   @Get(':slug')
@@ -41,6 +47,7 @@ export class CategoryController {
   //   return this.categoryService.findById(id);
   // }
 
+  // Update a category
   @Patch(':id')
   @Roles(UserRole.ADMIN)
   update() { }
