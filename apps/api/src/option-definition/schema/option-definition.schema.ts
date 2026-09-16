@@ -18,11 +18,19 @@ export class OptionDefinition {
 		type: [String],
 		required: true,
 		validate: {
-			validator: (values: string[]) => values.length > 0,
-			message: 'OptionDefinition must contain at least one value',
+			validator: (allowedValues: string[]) =>{
+				const normalized = allowedValues.map(
+					value => value.trim().toLowerCase(),
+				);
+
+				return (
+					new Set(normalized).size === normalized.length
+				);
+			},
+			message: 'allowedValues must contain unique values.',
 		},
 	})
-	values: string[];
+	allowedValues: string[];
 
 	@Prop({ default: true })
 	isActive: boolean;

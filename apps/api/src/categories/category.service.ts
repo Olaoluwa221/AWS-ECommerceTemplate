@@ -253,7 +253,10 @@ export class CategoryService {
             })
             .exec();
 
-        if (!category) {
+        if (
+            !category ||
+            !(await this.isEffectivelyActive(category))
+        ) {
             throw new NotFoundException(
                 `Category "${slug}" not found.`,
             );
@@ -264,7 +267,7 @@ export class CategoryService {
 
     // Deactivate a category
     async deactivate(id: string): Promise<CategoryDocument> {
-        const category = await this.categoryModel.findById(id);
+        const category = await this.findByIdOrThrow(id);
 
         if (!category) {
             throw new NotFoundException('Category not found.');
@@ -281,7 +284,7 @@ export class CategoryService {
 
     // Reactivate a category
     async reactivate(id: string): Promise<CategoryDocument> {
-        const category = await this.categoryModel.findById(id);
+        const category = await this.findByIdOrThrow(id);
 
         if (!category) {
             throw new NotFoundException('Category not found.');
@@ -338,8 +341,4 @@ export class CategoryService {
         // Permanently remove the document
         await category.deleteOne();
     }
-    // // Get a specific category using it's id
-    // async findById(id: string | Types.ObjectId){
-    //     return this.categoryModel.findById(id).exec;
-    // }
 }
