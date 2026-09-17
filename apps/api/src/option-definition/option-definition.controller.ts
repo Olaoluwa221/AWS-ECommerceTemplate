@@ -3,6 +3,8 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Param,
     Patch,
     Post,
@@ -14,7 +16,7 @@ import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto';
 import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto';
 import { OptionDefinitionService } from './option-definition.service';
 
-@Controller('option-definition')
+@Controller('option-definitions')
 export class OptionDefinitionController {
     constructor(
         private readonly optionDefinitionService:
@@ -75,6 +77,7 @@ export class OptionDefinitionController {
 
     // Permanently delete an inactive option definition.
     @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Roles(UserRole.ADMIN)
     remove(@Param('id') id: string) {
         return this.optionDefinitionService.remove(id);
