@@ -18,5 +18,5 @@ export class UpdateOptionDefinitionDto {
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })
-  allowedValues?: string[];
+  values?: string[];
 }

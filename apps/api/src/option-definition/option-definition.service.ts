@@ -36,8 +36,8 @@ export class OptionDefinitionService {
             createOptionDefinitionDto.displayName,
         );
 
-        const allowedValues = this.normalizeAllowedValues(
-            createOptionDefinitionDto.allowedValues,
+        const values = this.normalizeValues(
+            createOptionDefinitionDto.values,
         );
 
         await this.validateUniqueName(name);
@@ -45,9 +45,8 @@ export class OptionDefinitionService {
         const optionDefinition =
             new this.optionDefinitionModel({
                 name,
-                key: name,
                 displayName,
-                allowedValues,
+                values,
             });
 
         return this.saveOptionDefinition(optionDefinition);
@@ -72,12 +71,12 @@ export class OptionDefinitionService {
         }
 
         if (
-            updateOptionDefinitionDto.allowedValues !==
+            updateOptionDefinitionDto.values !==
             undefined
         ) {
-            optionDefinition.allowedValues =
-                this.normalizeAllowedValues(
-                    updateOptionDefinitionDto.allowedValues,
+            optionDefinition.values =
+                this.normalizeValues(
+                    updateOptionDefinitionDto.values,
                 );
         }
 
@@ -190,7 +189,7 @@ export class OptionDefinitionService {
     }
 
     // Clean up the allowed values and make sure they are non-empty and unique.
-    private normalizeAllowedValues(
+    private normalizeValues(
         values: string[],
     ): string[] {
         const normalizedValues = values.map(
@@ -203,7 +202,7 @@ export class OptionDefinitionService {
             )
         ) {
             throw new BadRequestException(
-                'allowedValues cannot contain empty values.',
+                'values cannot contain empty values.',
             );
         }
 
@@ -221,7 +220,7 @@ export class OptionDefinitionService {
             normalizedValues.length
         ) {
             throw new BadRequestException(
-                'allowedValues must contain unique values.',
+                'values must contain unique values.',
             );
         }
 

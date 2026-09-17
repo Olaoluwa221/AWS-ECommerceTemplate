@@ -11,15 +11,12 @@ export class OptionDefinition {
     @Prop({ required: true, trim: true})
     displayName: string;
 
-	@Prop({ required: true, trim: true, unique: true })
-	key: string;
-
 	@Prop({
 		type: [String],
 		required: true,
 		validate: {
-			validator: (allowedValues: string[]) =>{
-				const normalized = allowedValues.map(
+			validator: (values: string[]) =>{
+				const normalized = values.map(
 					value => value.trim().toLowerCase(),
 				);
 
@@ -27,10 +24,10 @@ export class OptionDefinition {
 					new Set(normalized).size === normalized.length
 				);
 			},
-			message: 'allowedValues must contain unique values.',
+			message: 'values array must contain unique values.',
 		},
 	})
-	allowedValues: string[];
+	values: string[];
 
 	@Prop({ default: true })
 	isActive: boolean;

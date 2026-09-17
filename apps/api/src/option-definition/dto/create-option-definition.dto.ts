@@ -22,5 +22,5 @@ export class CreateOptionDefinitionDto {
     @ArrayMinSize(1)
     @IsString({ each: true })
     @ArrayUnique()
-    allowedValues: string[];
+    values: string[];
 }
