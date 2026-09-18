@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { ProductsService } from './products.service';
-import { Public } from '../auth/decorators/public.decorator';
+import { ProductsService } from './products.service.js';
+import { Public } from '../auth/decorators/public.decorator.js';
 
 @Controller('products')
 export class ProductsController {

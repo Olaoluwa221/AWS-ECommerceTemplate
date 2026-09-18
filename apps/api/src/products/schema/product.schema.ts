@@ -9,7 +9,7 @@ export enum ProductStatus {
 	ARCHIVED = 'archived',
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'products' })
 export class Product {
     
     // Property to store the name of the product

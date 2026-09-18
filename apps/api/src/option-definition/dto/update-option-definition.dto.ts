@@ -5,6 +5,7 @@ import {
   MaxLength,
   MinLength,
   ArrayMinSize,
+  ArrayUnique,
 } from 'class-validator';
 
 export class UpdateOptionDefinitionDto {
@@ -16,6 +17,7 @@ export class UpdateOptionDefinitionDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayUnique()
   @ArrayMinSize(1)
   @IsString({ each: true })
   values?: string[];

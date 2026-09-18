@@ -1,29 +1,48 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import type { Connection } from 'mongoose';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+import {
+  closeTestApp,
+  createTestApp,
+} from './helper/app.helper.js';
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+describe('App (e2e)', () => {
+  let app: INestApplication;
+  let connection: Connection;
 
-    app = moduleFixture.createNestApplication();
+  beforeAll(async () => {
+    // Create Nestapp and Mongoose connection
+    const context = await createTestApp();
+
+    app = context.app;
+    connection = context.connection;
+
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  afterAll(async () => {
+    await closeTestApp(app);
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('connects to MongoDB', () => {
+    expect(connection.readyState).toBe(1);
+  });
+
+  it('uses MongoMemoryServer', () => {
+    expect(connection.host).toBe('127.0.0.1');
+  });
+
+  it('protects the root endpoint when unauthenticated', async () => {
+    await request(app.getHttpServer())
+      .get('/api')
+      .expect(401);
   });
 });

@@ -1,5 +1,5 @@
-import { UserDocument } from "../../users/schema/user.schema";
-import { SafeUser } from "../types/safe-user.types";
+import { UserDocument } from "../../users/schema/user.schema.js";
+import { SafeUser } from "../types/safe-user.types.js";
 
 export function toSafeUser(
   user: UserDocument,

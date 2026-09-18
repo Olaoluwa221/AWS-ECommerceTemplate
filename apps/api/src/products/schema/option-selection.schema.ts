@@ -2,7 +2,7 @@
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { OptionDefinition } from '../../option-definition/schema/option-definition.schema';
+import { OptionDefinition } from '../../option-definition/schema/option-definition.schema.js';
 
 @Schema({ _id: false })
 export class OptionSelection {

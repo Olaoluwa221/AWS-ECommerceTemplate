@@ -1,8 +1,8 @@
 import { Body, Controller, Patch, } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { SafeUser } from '../auth/types/safe-user.types';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UsersService } from './users.service.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import type { SafeUser } from '../auth/types/safe-user.types.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 @Controller('users')
 export class UsersController {

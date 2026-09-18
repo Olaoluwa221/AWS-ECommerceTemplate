@@ -41,6 +41,7 @@ export class OrderItem {
 
   // Property to store the method of fulfillment for this order item (delivery or pickup)
   @Prop({
+    type: String,
     required: true,
     enum: DeliveryMethod,
   })

@@ -1,14 +1,14 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { RegisterDto } from './dto/register.dto';
+import { UsersService } from '../users/users.service.js';
+import { RegisterDto } from './dto/register.dto.js';
 import * as argon2 from 'argon2';
-import { UserRole } from '../users/enums/user-role.enum';
-import { LoginDto } from './dto/login.dto';
+import { UserRole } from '../users/enums/user-role.enum.js';
+import { LoginDto } from './dto/login.dto.js';
 import { JwtService } from '@nestjs/jwt';
-import { AuthResult } from './types/authentication-result.types';
-import { SafeUser } from './types/safe-user.types';
-import { toSafeUser } from './mappers/to-safe-user.mapper';
-import { UpdatePasswordDto } from './dto/update-password.dto';
+import { AuthResult } from './types/authentication-result.types.js';
+import { SafeUser } from './types/safe-user.types.js';
+import { toSafeUser } from './mappers/to-safe-user.mapper.js';
+import { UpdatePasswordDto } from './dto/update-password.dto.js';
 
 @Injectable()
 export class AuthService {

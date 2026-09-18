@@ -1,15 +1,15 @@
 import { Body, Controller, Get, Header, HttpCode, HttpStatus, Patch, Post, Res, } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
+import { AuthService } from './auth.service.js';
+import { RegisterDto } from './dto/register.dto.js';
 import { ConfigService } from '@nestjs/config';
 import express from 'express';
-import { LoginDto } from './dto/login.dto';
-import { CurrentUser } from './decorators/current-user.decorator';
-import type { SafeUser } from './types/safe-user.types';
-import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Roles } from './decorators/roles.decorator';
-import { UserRole } from '../users/enums/user-role.enum';
-import { Public } from './decorators/public.decorator';
+import { LoginDto } from './dto/login.dto.js';
+import { CurrentUser } from './decorators/current-user.decorator.js';
+import type { SafeUser } from './types/safe-user.types.js';
+import { UpdatePasswordDto } from './dto/update-password.dto.js';
+import { Roles } from './decorators/roles.decorator.js';
+import { UserRole } from '../users/enums/user-role.enum.js';
+import { Public } from './decorators/public.decorator.js';
 
 @Controller('auth')
 export class AuthController {

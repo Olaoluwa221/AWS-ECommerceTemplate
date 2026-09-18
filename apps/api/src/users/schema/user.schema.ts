@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { UserRole } from '../enums/user-role.enum';
-import { Address, AddressSchema } from '../../common/schema/address.schema';
+import { UserRole } from '../enums/user-role.enum.js';
+import { Address, AddressSchema } from '../../common/schema/address.schema.js';
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema({
     timestamps: true,
+    collection: 'users'
 })
 export class User {
     // Property to store the unique identifier of the user
@@ -34,6 +35,7 @@ export class User {
 
     // Property to store the role of the user (admin or customer)
     @Prop({
+        type: String,
         required: true,
         enum: UserRole,
         default: UserRole.CUSTOMER,

@@ -2,7 +2,7 @@ import { Injectable, NotImplementedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-import { Cart, CartDocument } from './schemas/cart.schema';
+import { Cart, CartDocument } from './schemas/cart.schema.js';
 
 @Injectable()
 export class CartService {

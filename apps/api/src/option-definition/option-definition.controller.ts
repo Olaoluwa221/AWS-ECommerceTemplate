@@ -10,11 +10,11 @@ import {
     Post,
 } from '@nestjs/common';
 
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/enums/user-role.enum';
-import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto';
-import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto';
-import { OptionDefinitionService } from './option-definition.service';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../users/enums/user-role.enum.js';
+import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto.js';
+import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto.js';
+import { OptionDefinitionService } from './option-definition.service.js';
 
 @Controller('option-definitions')
 export class OptionDefinitionController {

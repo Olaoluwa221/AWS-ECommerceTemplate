@@ -3,19 +3,22 @@ import { HydratedDocument } from 'mongoose';
 
 export type OptionDefinitionDocument = HydratedDocument<OptionDefinition>;
 
-@Schema({ timestamps: true })
+@Schema({
+	timestamps: true,
+	collection: 'optionDefinitions',
+})
 export class OptionDefinition {
 	@Prop({ required: true, trim: true, unique: true })
 	name: string;
 
-    @Prop({ required: true, trim: true})
-    displayName: string;
+	@Prop({ required: true, trim: true })
+	displayName: string;
 
 	@Prop({
 		type: [String],
 		required: true,
 		validate: {
-			validator: (values: string[]) =>{
+			validator: (values: string[]) => {
 				const normalized = values.map(
 					value => value.trim().toLowerCase(),
 				);

@@ -1,9 +1,9 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
-import { Category, CategoryDocument } from './schemas/category.schema';
+import { Category, CategoryDocument } from './schemas/category.schema.js';
 import { InjectModel } from '@nestjs/mongoose';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateCategoryDto } from './dto/create-category.dto.js';
+import { UpdateCategoryDto } from './dto/update-category.dto.js';
 
 @Injectable()
 export class CategoryService {

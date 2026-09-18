@@ -1,4 +1,4 @@
 import {
   Address,
   AddressSchema,
-} from '../../common/schema/address.schema';
+} from '../../common/schema/address.schema.js';

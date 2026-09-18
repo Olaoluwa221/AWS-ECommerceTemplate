@@ -2,11 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-import { AddAddressDto } from './dto/add-address.dto';
-import { UpdateAddressDto } from './dto/update-address.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
-import { User, UserDocument } from './schema/user.schema';
-import { UserRole } from './enums/user-role.enum';
+import { AddAddressDto } from './dto/add-address.dto.js';
+import { UpdateAddressDto } from './dto/update-address.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { User, UserDocument } from './schema/user.schema.js';
+import { UserRole } from './enums/user-role.enum.js';
 
 type CreateUserInput = {
   firstName: string;

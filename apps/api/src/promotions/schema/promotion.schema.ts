@@ -5,6 +5,7 @@ export type PromotionDocument = HydratedDocument<Promotion>;
 
 @Schema({
   timestamps: true,
+  collection: 'promotions'
 })
 export class Promotion {
   // Unique identifier for the promotion.

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PromotionsController } from './promotions.controller';
-import { PromotionsService } from './promotions.service';
+import { PromotionsController } from './promotions.controller.js';
+import { PromotionsService } from './promotions.service.js';
 
 @Module({
   controllers: [PromotionsController],

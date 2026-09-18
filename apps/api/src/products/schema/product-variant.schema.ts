@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
-import { Product } from './product.schema';
+import { Product } from './product.schema.js';
 import {
   OptionSelection,
   OptionSelectionSchema,
-} from './option-selection.schema';
+} from './option-selection.schema.js';
 
 export type ProductVariantDocument = HydratedDocument<ProductVariant>;
 

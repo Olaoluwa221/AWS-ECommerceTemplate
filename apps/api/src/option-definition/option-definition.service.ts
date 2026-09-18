@@ -12,9 +12,9 @@ import {
     Types,
 } from 'mongoose';
 
-import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto';
-import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto';
-import { OptionDefinition, OptionDefinitionDocument } from './schema/option-definition.schema';
+import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto.js';
+import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto.js';
+import { OptionDefinition, OptionDefinitionDocument } from './schema/option-definition.schema.js';
 
 @Injectable()
 export class OptionDefinitionService {
@@ -144,15 +144,34 @@ export class OptionDefinitionService {
 
     // Permanently remove an inactive option definition.
     async remove(id: string): Promise<void> {
-        const optionDefinition = await this.findByIdOrThrow(id);
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException(
+                `Invalid option definition id "${id}".`,
+            );
+        }
 
-        if (optionDefinition.isActive) {
+        const deletedOptionDefinition =
+            await this.optionDefinitionModel.findOneAndDelete({
+                _id: id,
+                isActive: false,
+            }).exec();
+
+        if (deletedOptionDefinition) {
+            return;
+        }
+
+        const optionDefinition =
+            await this.optionDefinitionModel.findById(id).exec();
+
+        if (optionDefinition?.isActive) {
             throw new ConflictException(
                 'Option definition must be deactivated before it can be permanently deleted.',
             );
         }
 
-        await optionDefinition.deleteOne();
+        throw new NotFoundException(
+            `Option definition with id "${id}" not found.`,
+        );
     }
 
     // Turn a name into a consistent identifier and reject names with no usable characters.

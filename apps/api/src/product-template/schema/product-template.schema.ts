@@ -5,7 +5,7 @@ export type ProductTemplateDocument = HydratedDocument<ProductTemplate>;
 
 @Schema({
   timestamps: true,
-  collection: 'product_templates',
+  collection: 'productTemplates',
 })
 export class ProductTemplate {
     @Prop({ required: true, trim: true, unique: true })

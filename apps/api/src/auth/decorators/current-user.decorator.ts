@@ -2,7 +2,7 @@ import {
     createParamDecorator,
     ExecutionContext,
 } from '@nestjs/common';
-import { AuthenticatedRequest } from '../types/authenticated-request.types';
+import { AuthenticatedRequest } from '../types/authenticated-request.types.js';
 
 export const CurrentUser = createParamDecorator(
     (
