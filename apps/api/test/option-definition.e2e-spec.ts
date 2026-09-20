@@ -65,6 +65,10 @@ describe('Option-definition (e2e)', () => {
         await connection
             .collection('optionDefinitions')
             .deleteMany({});
+
+        await connection
+            .collection('productTemplates')
+            .deleteMany({});
     });
 
     // Closes the app after the suite is complete.
@@ -524,6 +528,51 @@ describe('Option-definition (e2e)', () => {
                 .delete(testRoutes.optionDefinitions.byId(optionDefinition._id))
                 .expect(409);
         });
+
+        it('rejects deletion when referenced by a product template',
+            async () => {
+                const optionDefinition =
+                    await createOptionDefinition({
+                        name: 'Size',
+                        displayName: 'Size',
+                        values: ['S', 'M', 'L'],
+                    });
+
+                await adminAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 'T-Shirt',
+                        options: [
+                            optionDefinition._id,
+                        ],
+                    })
+                    .expect(201);
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .optionDefinitions
+                            .deactivate(
+                                optionDefinition._id,
+                            ),
+                    )
+                    .expect(200);
+
+                await adminAgent
+                    .delete(
+                        testRoutes
+                            .optionDefinitions
+                            .byId(
+                                optionDefinition._id,
+                            ),
+                    )
+                    .expect(409);
+            },
+        );
 
         it('returns 400 for an invalid id', async () => {
             await adminAgent

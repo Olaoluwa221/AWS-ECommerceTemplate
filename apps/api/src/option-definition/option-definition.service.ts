@@ -1,16 +1,8 @@
-import {
-    BadRequestException,
-    ConflictException,
-    Injectable,
-    NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, } from '@nestjs/common';
 
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 
-import {
-    Model,
-    Types,
-} from 'mongoose';
+import { Connection, Model, Types, } from 'mongoose';
 
 import { CreateOptionDefinitionDto } from './dto/create-option-definition.dto.js';
 import { UpdateOptionDefinitionDto } from './dto/update-option-definition.dto.js';
@@ -20,8 +12,9 @@ import { OptionDefinition, OptionDefinitionDocument } from './schema/option-defi
 export class OptionDefinitionService {
     constructor(
         @InjectModel(OptionDefinition.name)
-        private readonly optionDefinitionModel:
-            Model<OptionDefinitionDocument>,
+        private readonly optionDefinitionModel: Model<OptionDefinitionDocument>,
+        @InjectConnection()
+        private readonly connection: Connection,
     ) { }
 
     // Clean up the input, check it, and save the new option definition.
@@ -144,34 +137,37 @@ export class OptionDefinitionService {
 
     // Permanently remove an inactive option definition.
     async remove(id: string): Promise<void> {
-        if (!Types.ObjectId.isValid(id)) {
-            throw new BadRequestException(
-                `Invalid option definition id "${id}".`,
-            );
-        }
-
-        const deletedOptionDefinition =
-            await this.optionDefinitionModel.findOneAndDelete({
-                _id: id,
-                isActive: false,
-            }).exec();
-
-        if (deletedOptionDefinition) {
-            return;
-        }
-
         const optionDefinition =
-            await this.optionDefinitionModel.findById(id).exec();
+            await this.findByIdOrThrow(id);
 
-        if (optionDefinition?.isActive) {
+        if (optionDefinition.isActive) {
             throw new ConflictException(
                 'Option definition must be deactivated before it can be permanently deleted.',
             );
         }
 
-        throw new NotFoundException(
-            `Option definition with id "${id}" not found.`,
-        );
+        const referencedByTemplate =
+            await this.connection
+                .collection('productTemplates')
+                .findOne(
+                    {
+                        options:
+                            optionDefinition._id,
+                    },
+                    {
+                        projection: {
+                            _id: 1,
+                        },
+                    },
+                );
+
+        if (referencedByTemplate) {
+            throw new ConflictException(
+                'Option definition cannot be permanently deleted while it is referenced by a product template.',
+            );
+        }
+
+        await optionDefinition.deleteOne();
     }
 
     // Turn a name into a consistent identifier and reject names with no usable characters.
