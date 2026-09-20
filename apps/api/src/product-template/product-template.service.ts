@@ -1,6 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Model, Types } from 'mongoose';
-import { OptionDefinitionDocument } from '../option-definition/schema/option-definition.schema.js';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProductTemplate, ProductTemplateDocument } from './schema/product-template.schema.js';
 import { CreateProductTemplateDto } from './dto/create-product-template.dto.js';
