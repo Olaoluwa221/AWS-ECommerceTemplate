@@ -183,10 +183,10 @@ export class ProductTemplateService {
         await productTemplate.deleteOne();
     }
 
-    private normalizeName(
-        name: string,
-    ): string {
-        const normalizedName = name.trim();
+    private normalizeName(name: string): string {
+        const normalizedName = name
+            .trim()
+            .replace(/\s+/g, ' ');
 
         if (!normalizedName) {
             throw new BadRequestException(
@@ -247,7 +247,14 @@ export class ProductTemplateService {
 
         const existingProductTemplate =
             await this.productTemplateModel
-                .exists(query);
+                .findOne(query)
+                .collation({
+                    locale: 'en',
+                    strength: 2,
+                })
+                .select('_id')
+                .lean()
+                .exec();
 
         if (existingProductTemplate) {
             throw new ConflictException(

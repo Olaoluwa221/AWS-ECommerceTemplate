@@ -19,7 +19,6 @@ export class ProductTemplate {
   @Prop({
     required: true,
     trim: true,
-    unique: true,
   })
   name: string;
 
@@ -52,3 +51,17 @@ export const ProductTemplateSchema =
   SchemaFactory.createForClass(
     ProductTemplate,
   );
+
+  ProductTemplateSchema.index(
+    {
+        name: 1,
+    },
+    {
+        name: 'product_template_name_ci_unique',
+        unique: true,
+        collation: {
+            locale: 'en',
+            strength: 2,
+        },
+    },
+);

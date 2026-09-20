@@ -109,303 +109,350 @@ describe('ProductTemplate (e2e)', () => {
         return response.body;
     }
 
-    describe(
-        'POST /api/product-templates',
-        () => {
-            it(
-                'returns 401 when unauthenticated',
-                async () => {
-                    await request(
-                        app.getHttpServer(),
+    describe('POST /api/product-templates', () => {
+        it('returns 401 when unauthenticated',
+            async () => {
+                await request(
+                    app.getHttpServer(),
+                )
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
                     )
+                    .send({
+                        name: 'T-Shirt',
+                    })
+                    .expect(401);
+            },
+        );
+
+        it('returns 403 for a customer',
+            async () => {
+                await customerAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 'T-Shirt',
+                    })
+                    .expect(403);
+            },
+        );
+
+        it('creates a template using active option definitions',
+            async () => {
+                const size =
+                    await createOptionDefinition(
+                        'Size',
+                    );
+
+                const color =
+                    await createOptionDefinition(
+                        'Color',
+                    );
+
+                const response =
+                    await adminAgent
                         .post(
                             testRoutes
                                 .productTemplates
                                 .root,
                         )
                         .send({
-                            name: 'T-Shirt',
+                            name: ' T-Shirt ',
+                            images: [
+                                'front.jpg',
+                                'back.jpg',
+                            ],
+                            options: [
+                                size._id,
+                                color._id,
+                            ],
                         })
-                        .expect(401);
-                },
-            );
+                        .expect(201);
 
-            it(
-                'returns 403 for a customer',
-                async () => {
-                    await customerAgent
-                        .post(
+                expect(
+                    response.body.name,
+                ).toBe('T-Shirt');
+
+                expect(
+                    response.body.images,
+                ).toEqual([
+                    'front.jpg',
+                    'back.jpg',
+                ]);
+
+                expect(
+                    response.body.options,
+                ).toHaveLength(2);
+
+                expect(
+                    response.body.isActive,
+                ).toBe(true);
+            },
+        );
+
+        it('rejects a duplicate name',
+            async () => {
+                await createProductTemplate({
+                    name: 'T-Shirt',
+                });
+
+                await adminAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 'T-Shirt',
+                    })
+                    .expect(409);
+            },
+        );
+
+        it('rejects duplicate names ignoring case',
+            async () => {
+                await createProductTemplate({
+                    name: 'T-Shirt',
+                });
+
+                await adminAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 't-shirt',
+                    })
+                    .expect(409);
+            },
+        );
+
+        it('rejects an unknown option definition',
+            async () => {
+                await adminAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 'T-Shirt',
+                        options: [
+                            '507f1f77bcf86cd799439011',
+                        ],
+                    })
+                    .expect(404);
+            },
+        );
+
+        it('rejects an inactive option definition',
+            async () => {
+                const size =
+                    await createOptionDefinition(
+                        'Size',
+                    );
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .optionDefinitions
+                            .deactivate(
+                                size._id,
+                            ),
+                    )
+                    .expect(200);
+
+                await adminAgent
+                    .post(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .send({
+                        name: 'T-Shirt',
+                        options: [
+                            size._id,
+                        ],
+                    })
+                    .expect(409);
+            },
+        );
+    },
+    );
+
+    describe('GET /api/product-templates', () => {
+        it('returns 401 when listing templates unauthenticated',
+            async () => {
+                await request(app.getHttpServer())
+                    .get(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .expect(401);
+            },
+        );
+
+        it('returns 403 when a customer lists templates',
+            async () => {
+                await customerAgent
+                    .get(
+                        testRoutes
+                            .productTemplates
+                            .root,
+                    )
+                    .expect(403);
+            },
+        );
+
+        it('lists active templates first and includes inactive templates for admins',
+            async () => {
+                const zebra =
+                    await createProductTemplate({
+                        name: 'Zebra',
+                    });
+
+                const alpha =
+                    await createProductTemplate({
+                        name: 'Alpha',
+                    });
+
+                const beta =
+                    await createProductTemplate({
+                        name: 'Beta',
+                    });
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .productTemplates
+                            .deactivate(
+                                beta._id,
+                            ),
+                    )
+                    .expect(200);
+
+                const response =
+                    await adminAgent
+                        .get(
                             testRoutes
                                 .productTemplates
                                 .root,
                         )
-                        .send({
-                            name: 'T-Shirt',
-                        })
-                        .expect(403);
-                },
-            );
+                        .expect(200);
 
-            it(
-                'creates a template using active option definitions',
-                async () => {
-                    const size =
-                        await createOptionDefinition(
-                            'Size',
-                        );
+                expect(
+                    response.body.map(
+                        (
+                            item: {
+                                name: string;
+                            },
+                        ) => item.name,
+                    ),
+                ).toEqual([
+                    'Alpha',
+                    'Zebra',
+                    'Beta',
+                ]);
 
-                    const color =
-                        await createOptionDefinition(
-                            'Color',
-                        );
+                expect(
+                    response.body[0].isActive,
+                ).toBe(true);
+                expect(
+                    response.body[2].isActive,
+                ).toBe(false);
+            },
+        );
 
-                    const response =
-                        await adminAgent
-                            .post(
-                                testRoutes
-                                    .productTemplates
-                                    .root,
-                            )
-                            .send({
-                                name: ' T-Shirt ',
-                                images: [
-                                    'front.jpg',
-                                    'back.jpg',
-                                ],
-                                options: [
-                                    size._id,
-                                    color._id,
-                                ],
-                            })
-                            .expect(201);
-
-                    expect(
-                        response.body.name,
-                    ).toBe('T-Shirt');
-
-                    expect(
-                        response.body.images,
-                    ).toEqual([
-                        'front.jpg',
-                        'back.jpg',
-                    ]);
-
-                    expect(
-                        response.body.options,
-                    ).toHaveLength(2);
-
-                    expect(
-                        response.body.isActive,
-                    ).toBe(true);
-                },
-            );
-
-            it(
-                'rejects a duplicate name',
-                async () => {
+        it('returns a template by id',
+            async () => {
+                const template =
                     await createProductTemplate({
                         name: 'T-Shirt',
                     });
 
+                const response =
                     await adminAgent
-                        .post(
+                        .get(
                             testRoutes
                                 .productTemplates
-                                .root,
-                        )
-                        .send({
-                            name: 'T-Shirt',
-                        })
-                        .expect(409);
-                },
-            );
-
-            it(
-                'rejects an unknown option definition',
-                async () => {
-                    await adminAgent
-                        .post(
-                            testRoutes
-                                .productTemplates
-                                .root,
-                        )
-                        .send({
-                            name: 'T-Shirt',
-                            options: [
-                                '507f1f77bcf86cd799439011',
-                            ],
-                        })
-                        .expect(404);
-                },
-            );
-
-            it(
-                'rejects an inactive option definition',
-                async () => {
-                    const size =
-                        await createOptionDefinition(
-                            'Size',
-                        );
-
-                    await adminAgent
-                        .patch(
-                            testRoutes
-                                .optionDefinitions
-                                .deactivate(
-                                    size._id,
+                                .byId(
+                                    template._id,
                                 ),
                         )
                         .expect(200);
 
-                    await adminAgent
-                        .post(
-                            testRoutes
-                                .productTemplates
-                                .root,
-                        )
-                        .send({
-                            name: 'T-Shirt',
-                            options: [
-                                size._id,
-                            ],
-                        })
-                        .expect(409);
-                },
-            );
-        },
+                expect(
+                    response.body._id,
+                ).toBe(template._id);
+                expect(
+                    response.body.name,
+                ).toBe('T-Shirt');
+                expect(
+                    response.body.isActive,
+                ).toBe(true);
+            },
+        );
+
+        it('returns 400 for an invalid product template id',
+            async () => {
+                await adminAgent
+                    .get(
+                        testRoutes
+                            .productTemplates
+                            .byId(
+                                'not-a-valid-object-id',
+                            ),
+                    )
+                    .expect(400);
+            },
+        );
+
+        it('returns 404 for a missing product template',
+            async () => {
+                await adminAgent
+                    .get(
+                        testRoutes
+                            .productTemplates
+                            .byId(
+                                '507f1f77bcf86cd799439011',
+                            ),
+                    )
+                    .expect(404);
+            },
+        );
+    },
     );
 
-    describe(
-        'GET /api/product-templates',
+    describe('PATCH /api/product-templates/:id',
         () => {
-            it(
-                'lists active templates first and includes inactive templates for admins',
-                async () => {
-                    const zebra =
-                        await createProductTemplate({
-                            name: 'Zebra',
-                        });
-
-                    const alpha =
-                        await createProductTemplate({
-                            name: 'Alpha',
-                        });
-
-                    const beta =
-                        await createProductTemplate({
-                            name: 'Beta',
-                        });
-
-                    await adminAgent
-                        .patch(
-                            testRoutes
-                                .productTemplates
-                                .deactivate(
-                                    beta._id,
-                                ),
-                        )
-                        .expect(200);
-
-                    const response =
-                        await adminAgent
-                            .get(
-                                testRoutes
-                                    .productTemplates
-                                    .root,
-                            )
-                            .expect(200);
-
-                    expect(
-                        response.body.map(
-                            (
-                                item: {
-                                    name: string;
-                                },
-                            ) => item.name,
-                        ),
-                    ).toEqual([
-                        'Alpha',
-                        'Zebra',
-                        'Beta',
-                    ]);
-
-                    expect(
-                        response.body[0].isActive,
-                    ).toBe(true);
-                    expect(
-                        response.body[2].isActive,
-                    ).toBe(false);
-                },
-            );
-
-            it(
-                'returns a template by id',
+            it('returns 403 when a customer updates a template',
                 async () => {
                     const template =
                         await createProductTemplate({
                             name: 'T-Shirt',
                         });
 
-                    const response =
-                        await adminAgent
-                            .get(
-                                testRoutes
-                                    .productTemplates
-                                    .byId(
-                                        template._id,
-                                    ),
-                            )
-                            .expect(200);
-
-                    expect(
-                        response.body._id,
-                    ).toBe(template._id);
-                    expect(
-                        response.body.name,
-                    ).toBe('T-Shirt');
-                    expect(
-                        response.body.isActive,
-                    ).toBe(true);
-                },
-            );
-
-            it(
-                'returns 400 for an invalid product template id',
-                async () => {
-                    await adminAgent
-                        .get(
+                    await customerAgent
+                        .patch(
                             testRoutes
                                 .productTemplates
-                                .byId(
-                                    'not-a-valid-object-id',
-                                ),
+                                .byId(template._id),
                         )
-                        .expect(400);
+                        .send({
+                            name: 'Changed',
+                        })
+                        .expect(403);
                 },
             );
 
-            it(
-                'returns 404 for a missing product template',
-                async () => {
-                    await adminAgent
-                        .get(
-                            testRoutes
-                                .productTemplates
-                                .byId(
-                                    '507f1f77bcf86cd799439011',
-                                ),
-                        )
-                        .expect(404);
-                },
-            );
-        },
-    );
-
-    describe(
-        'PATCH /api/product-templates/:id',
-        () => {
-            it(
-                'updates the template name, images, and option references',
+            it('updates the template name, images, and option references',
                 async () => {
                     const size =
                         await createOptionDefinition(
@@ -460,8 +507,7 @@ describe('ProductTemplate (e2e)', () => {
                 },
             );
 
-            it(
-                'rejects a duplicate name during update',
+            it('rejects a duplicate name during update',
                 async () => {
                     const original =
                         await createProductTemplate({
@@ -487,8 +533,7 @@ describe('ProductTemplate (e2e)', () => {
                 },
             );
 
-            it(
-                'rejects an unknown option definition during update',
+            it('rejects an unknown option definition during update',
                 async () => {
                     const template =
                         await createProductTemplate({
@@ -511,70 +556,61 @@ describe('ProductTemplate (e2e)', () => {
                         .expect(404);
                 },
             );
+
+            it('rejects a case-insensitive duplicate name during update',
+                async () => {
+                    await createProductTemplate({
+                        name: 'T-Shirt',
+                    });
+
+                    const hoodie =
+                        await createProductTemplate({
+                            name: 'Hoodie',
+                        });
+
+                    await adminAgent
+                        .patch(
+                            testRoutes
+                                .productTemplates
+                                .byId(hoodie._id),
+                        )
+                        .send({
+                            name: 't-shirt',
+                        })
+                        .expect(409);
+                },
+            );
         },
     );
 
-    describe(
-        'PATCH lifecycle',
-        () => {
-            it(
-                'deactivates and reactivates a template',
-                async () => {
-                    const template =
-                        await createProductTemplate({
-                            name: 'T-Shirt',
-                        });
+    describe('PATCH lifecycle', () => {
+        it('returns 403 when a customer deactivates a template',
+            async () => {
+                const template =
+                    await createProductTemplate({
+                        name: 'T-Shirt',
+                    });
 
-                    const deactivated =
-                        await adminAgent
-                            .patch(
-                                testRoutes
-                                    .productTemplates
-                                    .deactivate(
-                                        template._id,
-                                    ),
-                            )
-                            .expect(200);
+                await customerAgent
+                    .patch(
+                        testRoutes
+                            .productTemplates
+                            .deactivate(
+                                template._id,
+                            ),
+                    )
+                    .expect(403);
+            },
+        );
 
-                    expect(
-                        deactivated.body
-                            .isActive,
-                    ).toBe(false);
+        it('deactivates and reactivates a template',
+            async () => {
+                const template =
+                    await createProductTemplate({
+                        name: 'T-Shirt',
+                    });
 
-                    const reactivated =
-                        await adminAgent
-                            .patch(
-                                testRoutes
-                                    .productTemplates
-                                    .reactivate(
-                                        template._id,
-                                    ),
-                            )
-                            .expect(200);
-
-                    expect(
-                        reactivated.body
-                            .isActive,
-                    ).toBe(true);
-                },
-            );
-
-            it(
-                'refuses reactivation when an option has become inactive',
-                async () => {
-                    const size =
-                        await createOptionDefinition(
-                            'Size',
-                        );
-
-                    const template =
-                        await createProductTemplate({
-                            name: 'T-Shirt',
-                            options: [
-                                size._id,
-                            ],
-                        });
-
+                const deactivated =
                     await adminAgent
                         .patch(
                             testRoutes
@@ -585,16 +621,12 @@ describe('ProductTemplate (e2e)', () => {
                         )
                         .expect(200);
 
-                    await adminAgent
-                        .patch(
-                            testRoutes
-                                .optionDefinitions
-                                .deactivate(
-                                    size._id,
-                                ),
-                        )
-                        .expect(200);
+                expect(
+                    deactivated.body
+                        .isActive,
+                ).toBe(false);
 
+                const reactivated =
                     await adminAgent
                         .patch(
                             testRoutes
@@ -603,17 +635,84 @@ describe('ProductTemplate (e2e)', () => {
                                     template._id,
                                 ),
                         )
-                        .expect(409);
-                },
-            );
-        },
+                        .expect(200);
+
+                expect(
+                    reactivated.body
+                        .isActive,
+                ).toBe(true);
+            },
+        );
+
+        it('refuses reactivation when an option has become inactive',
+            async () => {
+                const size =
+                    await createOptionDefinition(
+                        'Size',
+                    );
+
+                const template =
+                    await createProductTemplate({
+                        name: 'T-Shirt',
+                        options: [
+                            size._id,
+                        ],
+                    });
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .productTemplates
+                            .deactivate(
+                                template._id,
+                            ),
+                    )
+                    .expect(200);
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .optionDefinitions
+                            .deactivate(
+                                size._id,
+                            ),
+                    )
+                    .expect(200);
+
+                await adminAgent
+                    .patch(
+                        testRoutes
+                            .productTemplates
+                            .reactivate(
+                                template._id,
+                            ),
+                    )
+                    .expect(409);
+            },
+        );
+    },
     );
 
-    describe(
-        'DELETE /api/product-templates/:id',
+    describe('DELETE /api/product-templates/:id',
         () => {
-            it(
-                'rejects deletion of an active template',
+            it('returns 403 when a customer deletes a template',
+                async () => {
+                    const template =
+                        await createProductTemplate({
+                            name: 'T-Shirt',
+                        });
+
+                    await customerAgent
+                        .delete(
+                            testRoutes
+                                .productTemplates
+                                .byId(template._id),
+                        )
+                        .expect(403);
+                },
+            );
+
+            it('rejects deletion of an active template',
                 async () => {
                     const template =
                         await createProductTemplate({
@@ -632,8 +731,7 @@ describe('ProductTemplate (e2e)', () => {
                 },
             );
 
-            it(
-                'permanently deletes an inactive template',
+            it('permanently deletes an inactive template',
                 async () => {
                     const template =
                         await createProductTemplate({
