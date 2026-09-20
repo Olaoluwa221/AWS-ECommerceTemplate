@@ -321,4 +321,75 @@ export class OptionDefinitionService {
             throw error;
         }
     }
+
+    async resolveActiveIds(
+        ids: string[],
+    ): Promise<Types.ObjectId[]> {
+        if (ids.length === 0) {
+            return [];
+        }
+
+        const objectIds = ids.map(id => {
+            if (!Types.ObjectId.isValid(id)) {
+                throw new BadRequestException(
+                    `Invalid option definition id "${id}".`,
+                );
+            }
+
+            return new Types.ObjectId(id);
+        });
+
+        const normalizedIds = objectIds.map(
+            id => id.toString(),
+        );
+
+        if (
+            new Set(normalizedIds).size !==
+            normalizedIds.length
+        ) {
+            throw new BadRequestException(
+                'Option definitions must be unique.',
+            );
+        }
+
+        const optionDefinitions =
+            await this.optionDefinitionModel
+                .find({
+                    _id: {
+                        $in: objectIds,
+                    },
+                })
+                .exec();
+
+        const foundIds = new Set(
+            optionDefinitions.map(
+                optionDefinition =>
+                    optionDefinition._id.toString(),
+            ),
+        );
+
+        const missingId = normalizedIds.find(
+            id => !foundIds.has(id),
+        );
+
+        if (missingId) {
+            throw new NotFoundException(
+                `Option definition with id "${missingId}" not found.`,
+            );
+        }
+
+        const inactiveOption =
+            optionDefinitions.find(
+                optionDefinition =>
+                    !optionDefinition.isActive,
+            );
+
+        if (inactiveOption) {
+            throw new ConflictException(
+                `Option definition "${inactiveOption.name}" is inactive.`,
+            );
+        }
+
+        return objectIds;
+    }
 }

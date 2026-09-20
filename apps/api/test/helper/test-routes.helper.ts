@@ -38,4 +38,17 @@ export const testRoutes = {
         reactivate: (id: string) =>
             `${API_PREFIX}/option-definitions/${id}/reactivate`,
     },
+
+    productTemplates: {
+        root: `${API_PREFIX}/product-templates`,
+
+        byId: (id: string) =>
+            `${API_PREFIX}/product-templates/${id}`,
+
+        deactivate: (id: string) =>
+            `${API_PREFIX}/product-templates/${id}/deactivate`,
+
+        reactivate: (id: string) =>
+            `${API_PREFIX}/product-templates/${id}/reactivate`,
+    },
 };
